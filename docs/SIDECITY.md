@@ -51,7 +51,7 @@ El primer tramo tiene esta secuencia de diseño:
 4. Reúnes materiales y marcas el primer refugio.
 5. Asignas trabajo a la obra. Al terminar, los tres fundadores forman el primer campamento estable.
 
-Los tres fundadores están disponibles desde el primer momento y tienen identidades distintas. La forma de crecimiento de la población posterior se definirá al desarrollar las rutinas y la sociedad; no hace falta resolver reproducción para jugar el primer campamento. Esta secuencia todavía no está implementada.
+Los tres fundadores están disponibles desde el primer momento y tienen identidades distintas. Selección, tareas, habilidades y primer fogón están implementados en la versión 0.2. El primer refugio sigue pendiente. La forma de crecimiento de la población posterior se definirá al desarrollar las rutinas y la sociedad; no hace falta resolver reproducción para jugar el primer campamento.
 
 ## Personas: control directo y autonomía
 
@@ -61,7 +61,7 @@ Tres necesidades iniciales bastan: alimento, descanso y refugio. La personalidad
 
 Una orden directa sustituye la tarea normal. Un oficio asignado permanece hasta que lo cambies. Al terminar una orden, la persona vuelve a su oficio o a su rutina. Una necesidad crítica puede interrumpir el trabajo y debe explicarse. La autonomía y el trabajo no generan recursos por duplicado ni funcionan desde la animación de dibujo.
 
-La primera prueba solo necesita selección, movimiento con rutas y recolección. Las necesidades y rutinas llegan después de demostrar que mandar a los habitantes es claro y agradable.
+La versión 0.2 ofrece selección, rutas, recolección, estudio, exploración, cocina y primer fogón, con progreso separado por habilidad. Las necesidades y rutinas llegan después de demostrar que mandar a los habitantes es claro y agradable.
 
 ## Dos progresiones independientes
 

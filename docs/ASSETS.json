@@ -7,6 +7,8 @@
     {"id":"terrain","source":"src/renderer.js","variants":["grass x6","water x3","riverbank x3","soil faces"],"anchor":"parcel vertices","collision":"logical terrain in core.js"},
     {"id":"trees","source":"src/renderer.js: makeTree","variants":6,"spriteSize":[144,180],"anchor":[72,160],"transparency":true,"collision":"tree flag on logical parcel"},
     {"id":"details","source":"src/renderer.js","variants":["grass tufts","flowers","stones","reeds","water glints"],"collision":"none"},
-    {"id":"interface","source":"index.html","format":"inline SVG","variants":["parcel mark","map","grid","fit","home","north"],"collision":"none"}
+    {"id":"interface","source":"index.html","format":"inline SVG","variants":["parcel mark","map","grid","fit","home","north"],"collision":"none"},
+    {"id":"founders","source":"src/renderer.js: drawPerson","variants":["Ana","Ivo","Nara"],"anchor":"feet on logical parcel","animation":["walk","work"],"collision":"land paths"},
+    {"id":"camp","source":"src/renderer.js","variants":["berry shrub","depleted shrub","stump","stone firepit","controlled fire"],"collision":"logical resource state in simulation.js"}
   ]
 }

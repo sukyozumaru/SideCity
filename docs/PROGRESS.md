@@ -1,5 +1,9 @@
 # Avances · 3 de noviembre de 2026
 
+## Versión 0.2 y pausa
+
+Estado vigente: `CONTINUAR.md` en la raíz del proyecto. Se implementaron tres fundadores, seis tareas, habilidades y niveles independientes, especialidad e historial, recursos finitos, fuego, fogón, cocina y guardado con respaldo. El usuario pidió pantalla completa sin franjas claras; el HUD usa islas compactas verde oscuro sobre el mapa. 19 pruebas pasan. Las secciones siguientes conservan el registro de la etapa anterior; la próxima función es el primer refugio. Pausado por petición explícita del usuario, sin añadir funciones nuevas.
+
 ## Terreno y cámara
 
 Se reconstruye la etapa desde cero por autorización del usuario. El prototipo lateral queda archivado; la falta del ZIP no bloquea el desarrollo. La aplicación activa está en `index.html` y `src/`.

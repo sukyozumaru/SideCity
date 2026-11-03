@@ -1,5 +1,7 @@
 import { Camera, Gestures, createWorld, unproject, clamp } from './core.js';
 import { Renderer } from './renderer.js';
+import { loadSimulation, saveSimulation } from './persistence.js';
+import { PeopleUI } from './people-ui.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('world'), viewport = $('viewport');
@@ -10,6 +12,21 @@ renderer.reducedMotion = motionPreference.matches;
 motionPreference.addEventListener('change', e => { renderer.reducedMotion = e.matches; invalidate(); });
 let dirty = true, lastDraw = 0, saveTimer;
 const invalidate = () => { dirty = true; };
+let storage;
+try { storage = localStorage; } catch { storage = { getItem() { return null; }, setItem() { throw new Error('Almacenamiento no disponible.'); } }; }
+const loaded = loadSimulation(world, storage), simulation = loaded.simulation;
+renderer.simulation = simulation;
+const peopleUI = new PeopleUI(simulation, renderer, camera, invalidate);
+let paused = false, speed = 1, accumulator = 0, previousTime = 0, lastUI = 0, lastSave = 0, savedRevision = -1;
+if (loaded.blocked) { $('save-status').textContent = 'Guardado protegido'; peopleUI.notify('El guardado no se pudo leer. Conservamos sus datos; esta sesión no los sobrescribirá.'); }
+if (loaded.recovered) peopleUI.notify('Se recuperó la última copia válida de tu comunidad.');
+function persist() {
+  if (loaded.blocked) return;
+  try { saveSimulation(simulation, storage); $('save-status').textContent = 'Guardado local'; savedRevision = simulation.revision; }
+  catch { $('save-status').textContent = 'No se pudo guardar'; }
+}
+$('pause-sim').onclick = () => { paused = !paused; $('pause-sim').textContent = paused ? 'Continuar' : 'Pausar'; $('pause-sim').setAttribute('aria-pressed', String(paused)); };
+$('sim-speed').onclick = () => { speed = speed === 1 ? 3 : 1; $('sim-speed').textContent = `${speed}×`; };
 function saveView() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
@@ -28,7 +45,9 @@ function cellAt(x, y) {
 }
 function clearSelection() { renderer.selected = null; $('parcel').hidden = true; invalidate(); }
 function select(x, y) {
+  if (peopleUI.tap(x, y)) return;
   const tile = cellAt(x, y);
+  if (peopleUI.selected.length) { if (tile) peopleUI.order('move', { x: tile.x, y: tile.y }); return; }
   renderer.selected = tile;
   $('parcel').hidden = !tile;
   if (!tile) { invalidate(); return; }
@@ -72,7 +91,7 @@ $('zoom-out').onclick = () => zoomBy(.8);
 $('home').onclick = () => { camera.home(); updateCamera(); };
 $('fit').onclick = () => { camera.fit(); updateCamera(); };
 $('grid').onclick = () => { renderer.grid = !renderer.grid; $('grid').setAttribute('aria-pressed', String(renderer.grid)); $('grid').classList.toggle('active', renderer.grid); invalidate(); saveView(); };
-$('explore').onclick = () => { clearSelection(); canvas.focus(); };
+$('explore').onclick = () => { peopleUI.choose([]); clearSelection(); canvas.focus(); };
 $('close-parcel').onclick = clearSelection;
 $('minimap').addEventListener('pointerdown', e => {
   const r = $('minimap').getBoundingClientRect();
@@ -87,7 +106,7 @@ canvas.addEventListener('keydown', e => {
   if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomBy(1.25); }
   if (e.key === '-') { e.preventDefault(); zoomBy(.8); }
   if (e.key === 'Home') { e.preventDefault(); camera.home(); updateCamera(); }
-  if (e.key === 'Escape') clearSelection();
+  if (e.key === 'Escape') { peopleUI.choose([]); clearSelection(); }
   if (e.key === 'Enter') select(camera.width / 2, camera.height / 2);
 });
 $('help').onclick = () => { gestures.cancelAll(); $('help-dialog').showModal(); };
@@ -103,8 +122,20 @@ try {
 } catch { /* Invalid view preferences fall back to the meadow. */ }
 updateCamera();
 function frame(time) {
-  if (!document.hidden && (dirty || !renderer.reducedMotion && time - lastDraw >= 65)) { renderer.draw(time); dirty = false; lastDraw = time; }
+  const dt = previousTime ? Math.min((time - previousTime) / 1000, .25) : 0; previousTime = time;
+  if (!document.hidden && !paused && !$('help-dialog').open) {
+    accumulator += dt * speed;
+    while (accumulator >= .1) { simulation.update(.1); accumulator -= .1; }
+  }
+  if (!document.hidden && time - lastUI >= 200) {
+    peopleUI.refresh(); lastUI = time;
+    if (simulation.events.length) peopleUI.notify(simulation.events.splice(0).join(' '));
+  }
+  if (time - lastSave >= 5000 || simulation.revision !== savedRevision && time - lastSave >= 750) { persist(); lastSave = time; }
+  const animated = simulation.people.some(p => p.job) && !paused;
+  if (!document.hidden && (dirty || animated || !renderer.reducedMotion && time - lastDraw >= 65)) { renderer.draw(time); dirty = false; lastDraw = time; }
   requestAnimationFrame(frame);
 }
-document.addEventListener('visibilitychange', () => { gestures.cancelAll(); canvas.classList.remove('dragging'); invalidate(); });
+document.addEventListener('visibilitychange', () => { gestures.cancelAll(); canvas.classList.remove('dragging'); previousTime = 0; accumulator = 0; if (document.hidden) persist(); invalidate(); });
+window.addEventListener('pagehide', persist);
 requestAnimationFrame(frame);

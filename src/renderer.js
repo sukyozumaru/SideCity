@@ -1,4 +1,5 @@
 import { SIZE, TILE_W, TILE_H, project, hash } from './core.js';
+import { SKILLS } from './simulation.js';
 
 const grass = ['#91b56e', '#94b872', '#96b974', '#92b570', '#98ba75', '#90b36d'];
 function polygon(ctx, points, fill, stroke) {
@@ -100,7 +101,7 @@ export class Renderer {
   }
   draw(time = 0) {
     const c = this.ctx, camera = this.camera, { width: w, height: h, zoom: z } = camera;
-    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.fillStyle = '#d7e1d8'; c.fillRect(0, 0, w, h);
+    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.fillStyle = '#8a9d82'; c.fillRect(0, 0, w, h);
     c.translate(w / 2, h / 2); c.scale(z, z); c.translate(-camera.x, -camera.y);
     c.drawImage(this.cache, -this.origin.x, -this.origin.y);
     if (this.grid) {
@@ -111,9 +112,24 @@ export class Renderer {
     const tile = this.selected || this.hover;
     if (tile) { c.lineWidth = 2 / z; diamond(c, tile.x, tile.y, this.selected ? '#f6f7cf55' : '#ffffff22', this.selected ? '#f9fbec' : '#e3ebce'); }
     const bounds = { left: camera.x - w / 2 / z - 100, right: camera.x + w / 2 / z + 100, top: camera.y - h / 2 / z - 50, bottom: camera.y + h / 2 / z + 170 };
-    for (const tree of this.world.trees) {
-      const p = project(tree.x, tree.y);
+    const objects = this.world.trees.map(tree => ({ kind: 'tree', item: tree, x: tree.x, y: tree.y }));
+    if (this.simulation) {
+      for (const person of this.simulation.people) objects.push({ kind: 'person', item: person, x: person.x, y: person.y });
+      for (const bush of this.simulation.shrubs) objects.push({ kind: 'bush', item: bush, x: bush.x + .5, y: bush.y + .5 });
+      objects.push({ kind: 'fire', x: 21.5, y: 16.5 });
+    }
+    objects.sort((a, b) => a.x + a.y - b.x - b.y);
+    for (const object of objects) {
+      c.globalAlpha = 1;
+      const p = project(object.x, object.y);
       if (p.x < bounds.left || p.x > bounds.right || p.y < bounds.top || p.y > bounds.bottom) continue;
+      if (object.kind === 'person') { this.drawPerson(object.item, p, time); continue; }
+      if (object.kind === 'bush') { this.drawBush(object.item, p); continue; }
+      if (object.kind === 'fire') { this.drawFire(p, time); continue; }
+      const tree = object.item;
+      if (this.simulation && !this.simulation.standing(Math.floor(tree.x), Math.floor(tree.y))) {
+        ellipse(c, p.x, p.y, 8, 4, '#8d7754'); ellipse(c, p.x, p.y - 3, 7, 3, '#c0a778'); continue;
+      }
       const occluding = this.selected && Math.abs(p.x - project(this.selected.x + .5, this.selected.y + .5).x) < 45 && p.y > project(this.selected.x + .5, this.selected.y + .5).y && p.y - project(this.selected.x + .5, this.selected.y + .5).y < 120;
       c.globalAlpha = occluding ? .35 : 1;
       c.drawImage(this.sprites[tree.variant], p.x - 72, p.y - 160);
@@ -133,6 +149,60 @@ export class Renderer {
       }
     }
     this.drawMinimap();
+  }
+  drawPerson(person, p, time) {
+    const c = this.ctx, selected = this.selectedPeople?.includes(person.id), moving = person.job?.path.length > 0;
+    const working = person.job && !moving && SKILLS[person.job.kind] && person.state === SKILLS[person.job.kind].action;
+    const phase = this.reducedMotion ? 0 : time / (moving ? 90 : 250) + person.id.length;
+    c.save(); c.translate(p.x, p.y);
+    ellipse(c, 3, 1, 13, 5, '#294f3738');
+    if (selected) { c.strokeStyle = '#f9fbe7'; c.lineWidth = 2 / this.camera.zoom; c.beginPath(); c.ellipse(0, 0, 17, 8, 0, 0, Math.PI * 2); c.stroke(); }
+    const stride = moving ? Math.sin(phase) * 5 : 0, bob = moving ? Math.abs(Math.sin(phase)) * 1.5 : 0;
+    c.translate(0, -bob);
+    c.lineCap = 'round'; c.strokeStyle = '#4b4436'; c.lineWidth = 5;
+    c.beginPath(); c.moveTo(-4, -15); c.lineTo(-5 + stride, -2); c.moveTo(4, -15); c.lineTo(5 - stride, -2); c.stroke();
+    polygon(c, [{ x: -8, y: -34 }, { x: 7, y: -34 }, { x: 9, y: -14 }, { x: -8, y: -14 }], person.color);
+    polygon(c, [{ x: 0, y: -34 }, { x: 7, y: -34 }, { x: 9, y: -14 }, { x: 1, y: -14 }], '#2d403327');
+    c.strokeStyle = '#d4ac7e'; c.lineWidth = 4;
+    const arm = working ? Math.sin(phase * 3) * 6 : stride;
+    c.beginPath(); c.moveTo(-8, -31); c.lineTo(-12 - arm * .4, -21 - (working ? 6 : 0)); c.moveTo(8, -31); c.lineTo(12 + arm * .5, -20 - (working ? 8 : 0)); c.stroke();
+    ellipse(c, 0, -40, 7.5, 9, '#d7ae82');
+    ellipse(c, -1, -45, 8, 5.5, person.hair);
+    if (person.id === 'ana' || person.id === 'nara') ellipse(c, -7, -39, 3.5, 8, person.hair);
+    c.fillStyle = '#413a2e'; c.fillRect(3, -41, 1.2, 1.5);
+    c.strokeStyle = '#7b6545'; c.lineWidth = 2; c.beginPath(); c.moveTo(-7, -16); c.lineTo(8, -16); c.stroke();
+    if (working && person.job.kind === 'logging') {
+      c.save(); c.translate(14, -26); c.rotate(-.4 + Math.sin(phase * 3) * .5); c.strokeStyle = '#776047'; c.lineWidth = 3; c.beginPath(); c.moveTo(0, 8); c.lineTo(0, -12); c.stroke(); polygon(c, [{x:0,y:-13},{x:9,y:-12},{x:8,y:-5},{x:0,y:-6}], '#8f9787'); c.restore();
+    }
+    if (selected || this.camera.zoom > .65) {
+      c.font = `600 ${11 / this.camera.zoom}px system-ui`; c.textAlign = 'center'; c.textBaseline = 'bottom';
+      c.fillStyle = '#253e32'; const width = c.measureText(person.name).width;
+      c.fillRect(-width / 2 - 5 / this.camera.zoom, -65 - 15 / this.camera.zoom, width + 10 / this.camera.zoom, 19 / this.camera.zoom);
+      c.fillStyle = '#edf1e4'; c.fillText(person.name, 0, -64);
+    }
+    if (selected && working) { c.fillStyle = '#315d49'; c.fillRect(-15, -56, 30 * Math.min(person.job.progress, 1), 3); }
+    c.restore();
+    if (selected && person.job?.path.length) {
+      c.save(); c.lineWidth = 1.5 / this.camera.zoom; c.strokeStyle = '#f7f8dfbb'; c.setLineDash([4 / this.camera.zoom, 5 / this.camera.zoom]); c.beginPath(); c.moveTo(p.x, p.y);
+      for (const step of person.job.path) { const s = project(step.x, step.y); c.lineTo(s.x, s.y); }
+      c.stroke(); c.restore();
+    }
+  }
+  drawBush(bush, p) {
+    const c = this.ctx; ellipse(c, p.x + 3, p.y, 18, 6, '#31583a25');
+    ellipse(c, p.x - 6, p.y - 8, 11, 10, '#658b4b'); ellipse(c, p.x + 7, p.y - 10, 12, 12, '#7b9b52'); ellipse(c, p.x, p.y - 16, 10, 9, '#8ca65c');
+    if (bush.remaining) for (let i = 0; i < Math.min(bush.remaining, 5); i++) ellipse(c, p.x - 8 + i * 4, p.y - 10 - i % 2 * 7, 2.5, 2.3, '#b96956');
+  }
+  drawFire(p, time) {
+    const c = this.ctx; c.save(); c.translate(p.x, p.y);
+    for (let i = 0; i < 7; i++) ellipse(c, Math.cos(i / 7 * Math.PI * 2) * 16, Math.sin(i / 7 * Math.PI * 2) * 8, 5, 3.5, i % 2 ? '#a4a58a' : '#8f977e');
+    if (this.simulation.firepit) {
+      c.strokeStyle = '#7b5e3e'; c.lineWidth = 5; c.beginPath(); c.moveTo(-9, -3); c.lineTo(9, 3); c.moveTo(-9, 3); c.lineTo(9, -3); c.stroke();
+      const sway = this.reducedMotion ? 0 : Math.sin(time / 180) * 2;
+      polygon(c, [{ x: -7, y: -4 }, { x: -3, y: -18 }, { x: 1 + sway, y: -28 }, { x: 7, y: -13 }, { x: 6, y: -3 }], '#d79c4c');
+      polygon(c, [{ x: -3, y: -4 }, { x: 1, y: -17 }, { x: 4, y: -5 }], '#eed38a');
+    }
+    c.restore();
   }
   drawMinimap() {
     const c = this.mc, cam = this.camera; c.drawImage(this.miniTerrain, 0, 0);

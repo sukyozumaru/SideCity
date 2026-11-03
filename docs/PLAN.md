@@ -12,9 +12,9 @@ El arranque definido por el usuario son tres colonos fundadores desde el primer 
 
 La etapa de terreno y cámara se reconstruyó con autorización del usuario; no depende del ZIP anterior. La aplicación activa está en `index.html` y `src/`. El prototipo lateral se conserva en `legacy/`, fuera de la nueva aplicación.
 
-Implementado: terreno 48 × 48, río conectado, vegetación, proyección isométrica, inspección, cuadrícula, minimapa, arrastre y zoom táctil. Siete pruebas de reglas y gestos; revisión en navegador móvil emulado. Pendiente: Safari en iPhone físico.
+Implementado: terreno 48 × 48, río, vegetación, proyección, cámara táctil y tres fundadores seleccionables. Órdenes de movimiento, seis tareas, niveles independientes, especialidad e historial. Guardado validado con copia de respaldo. Vista a pantalla completa con HUD oscuro. Ver `PROFESSIONS.md`. Pendiente: Safari en iPhone físico.
 
-Habitantes, construcción, necesidades, eras y sandbox están diseñados, pero aún no forman parte del juego ejecutable.
+Los habitantes, la recolección, el fogón y la cocina ya forman parte del juego ejecutable. Vivienda, necesidades, eras completas y sandbox siguen diseñados y pendientes de implementación.
 
 ## Entregas por dependencia
 
