@@ -1,6 +1,5 @@
-import { project, unproject } from './core.js';
+import { project } from './core.js';
 import { SKILLS, TASKS, skillProgress, skillLevel, profession, MAX_LEVEL } from './simulation.js';
-import { insideShelter } from './camp.js';
 import { MINERALS } from './terrain.js';
 import { MINERAL_ITEMS } from './items.js';
 const $ = id => document.getElementById(id);
@@ -11,7 +10,7 @@ export class PeopleUI {
       const button = document.createElement('button'); button.className = 'person-chip'; button.dataset.person = p.id; button.setAttribute('aria-pressed', 'false');
       const portrait = document.createElement('span'); portrait.className = 'portrait'; portrait.style.setProperty('--coat', p.color); portrait.style.setProperty('--hair', p.hair);
       const text = document.createElement('span'), name = document.createElement('strong'), state = document.createElement('small'); name.textContent = p.name; state.textContent = 'Libre'; state.dataset.state = p.id; text.append(name, state); button.append(portrait, text);
-      button.onclick = () => { this.choose([p.id]); const point = project(p.x, p.y); camera.x = point.x + (camera.width > 700 ? 80 / camera.zoom : 0); camera.y = point.y + (camera.width < 700 ? 180 / camera.zoom : -35 / camera.zoom); camera.bound(); onChange(); };
+      button.onclick = () => { this.choose([p.id]);this.focusPerson(p); };
       $('roster').append(button);
     }
     const all = document.createElement('button'); all.className = 'group-button'; all.textContent = 'Adultos'; all.onclick = () => this.choose(this.sim.people.filter(p=>p.stage==='adult').map(p => p.id)); $('roster').append(all);
@@ -33,7 +32,6 @@ export class PeopleUI {
     $('specialty').onchange = () => { if (this.selected.length === 1) this.sim.setSpecialty(this.selected[0], $('specialty').value); this.refresh(); this.onChange(); };
     for (const category of ['work', 'build', 'craft', 'care']) $('category-' + category).onclick = () => this.showCategory(category);
     $('cancel-shelter').onclick = () => { if (this.sim.cancelBuilding((this.sim.activeProject('shelter')||this.sim.shelter).id)) this.notify('Materiales recuperados. Puedes empezar la obra de nuevo.'); this.refresh(); this.onChange(); };
-    $('camp-status').onclick = () => { this.choose(this.sim.people.map(p => p.id)); this.showTab('tasks'); this.showCategory('build'); const p = project(20, 15); this.camera.x = p.x + 100 / camera.zoom; this.camera.y = p.y + (camera.width < 700 ? 170 / camera.zoom : 0); this.onChange(); };
     for (const tab of ['tasks', 'skills', 'history']) $('tab-' + tab).onclick = () => this.showTab(tab);
     const tabs = ['tasks', 'skills', 'history'];
     tabs.forEach((tab, i) => $('tab-' + tab).addEventListener('keydown', e => {
@@ -54,6 +52,13 @@ export class PeopleUI {
     for (const id of ['tasks', 'skills', 'history']) { $('view-' + id).hidden = id !== tab; $('tab-' + id).setAttribute('aria-selected', String(id === tab)); $('tab-' + id).tabIndex = id === tab ? 0 : -1; }
     this.tab = tab; this.refresh();
   }
+  focusPerson(person) {
+    const c=this.camera,point=project(person.x,person.y);c.x=point.x;c.y=point.y;
+    const phone=c.width<=700&&c.height>500;
+    const panelTop=c.height-110-Math.min(c.height*.54,c.height-346);
+    c.pan(phone?c.width*.26-c.width/2:-100,phone?Math.max(210,panelTop-18)-c.height/2:35);
+    this.onChange();
+  }
   choose(ids) {
     if(ids.length){document.dispatchEvent(new CustomEvent('sidecity:person-open'));document.dispatchEvent(new CustomEvent('sidecity:panel-open',{detail:'person'}));}
     this.selected = ids; this.renderer.selectedPeople = ids; this.renderer.selected = null; $('parcel').hidden = true;
@@ -61,6 +66,7 @@ export class PeopleUI {
     $('workspace').classList.toggle('has-person', ids.length > 0);
     $('explore').setAttribute('aria-pressed', String(!ids.length)); $('explore').classList.toggle('active', !ids.length);
     $('roster').querySelector('.group-button').setAttribute('aria-pressed', String(ids.length === this.sim.people.filter(p=>p.stage==='adult').length));
+    if(ids.length===1&&this.tab==='tasks')this.showCategory(TASKS[this.sim.person(ids[0]).job?.kind]?.category||'work');
     if (ids.length > 1) this.showTab('tasks');
     $('tab-skills').disabled = ids.length !== 1; $('tab-history').disabled = ids.length !== 1;
     this.refresh(); this.onChange();
@@ -79,32 +85,17 @@ export class PeopleUI {
   tap(x, y) {
     let nearest = null, distance = 34;
     for (const person of this.sim.people) {
-      const p = project(person.x, person.y), screen = this.camera.worldToScreen(p.x, p.y - 26);
+      const screen=this.camera.gridToScreen(person.x,person.y,person.stage==='child'?22:28);
       const d = Math.hypot(screen.x - x, screen.y - y); if (d < distance) { nearest = person; distance = d; }
     }
     if (nearest && this.camera.zoom > .3) { this.choose([nearest.id]); return true; }
     return false;
   }
-  interact(x, y) {
-    if (!this.selected.length) return false;
-    const point = this.camera.screenToWorld(x, y), cell = unproject(point.x, point.y), tile = this.sim.world.get(Math.floor(cell.x), Math.floor(cell.y));
-    if (!tile) return false;
-    if(this.sim.hasBridge(tile.x,tile.y)){this.order('move',tile);return true;}
-    for(const s of this.sim.buildings.filter(b=>b.reserved).sort((a,b)=>b.x+b.y-a.x-a.y)){const roof=project(s.x+s.width/2,s.y+s.height/2);if(insideShelter(s,tile.x,tile.y)||s.kind==='shelter'&&point.x>roof.x-75&&point.x<roof.x+75&&point.y>roof.y-112&&point.y<roof.y+25){if(s.kind==='shelter'||!s.complete){this.order(s.complete?'sleep':s.kind,{buildingId:s.id});return true;}}}
-    for (const tree of [...this.sim.world.trees].reverse()) { const p = project(tree.x, tree.y); if (this.sim.standing(Math.floor(tree.x), Math.floor(tree.y)) && Math.abs(point.x-p.x)<37 && point.y>p.y-122 && point.y<p.y+6) { this.order('logging',{x:Math.floor(tree.x),y:Math.floor(tree.y)}); return true; } }
-    for (const bush of this.sim.shrubs) { const p = project(bush.x+.5,bush.y+.5); if(Math.abs(point.x-p.x)<23 && point.y>p.y-28 && point.y<p.y+8){this.order('foraging',bush);return true;} }
-    if (this.sim.standing(tile.x, tile.y)) { this.order('logging', tile); return true; }
-    const mineral=this.sim.world.mineralAt(tile.x,tile.y);if(mineral&&this.sim.mineralRemaining(mineral)){if(MINERAL_ITEMS[mineral.kind])this.order('mining',tile);else this.notify(`${MINERALS[mineral.kind].name}: requiere herramientas de una tecnología posterior.`);return true;}
-    if(this.sim.world.scatter.some(s=>s.x===tile.x&&s.y===tile.y)&&!this.sim.scavenged.has(`${tile.x},${tile.y}`)){this.order('scavenge',tile);return true;}
-    if (this.sim.shrubs.some(b => b.x === tile.x && b.y === tile.y)) { this.order('foraging', tile); return true; }
-    if (tile.x===21&&tile.y===16&&this.sim.firepit){this.order('cooking');return true;}
-    if (tile.type === 'water'&&!this.sim.hasBridge(tile.x,tile.y)) { this.order('drink', tile); return true; }
-    this.order('move', tile); return true;
-  }
+  interact(x,y){return this.onInteract?.(x,y)||false;}
   refresh() {
     for(const p of this.sim.people)if(!$('roster').querySelector(`[data-person="${p.id}"]`)){
       const b=document.createElement('button');b.className='person-chip';b.dataset.person=p.id;b.setAttribute('aria-pressed','false');
-      const portrait=document.createElement('span');portrait.className='portrait';portrait.style.setProperty('--coat',p.color);portrait.style.setProperty('--hair',p.hair);const text=document.createElement('span'),name=document.createElement('strong'),state=document.createElement('small');name.textContent=p.name;text.append(name,state);b.append(portrait,text);b.onclick=()=>{this.choose([p.id]);const point=project(p.x,p.y);this.camera.x=point.x;this.camera.y=point.y;this.onChange();};$('roster').insertBefore(b,$('roster').querySelector('.group-button'));
+      const portrait=document.createElement('span');portrait.className='portrait';portrait.style.setProperty('--coat',p.color);portrait.style.setProperty('--hair',p.hair);const text=document.createElement('span'),name=document.createElement('strong'),state=document.createElement('small');name.textContent=p.name;text.append(name,state);b.append(portrait,text);b.onclick=()=>{this.choose([p.id]);this.focusPerson(p);};$('roster').insertBefore(b,$('roster').querySelector('.group-button'));
     }
     for (const p of this.sim.people) {
       const button = $('roster').querySelector(`[data-person="${p.id}"]`); button.setAttribute('aria-pressed', String(this.selected.includes(p.id)));

@@ -14,7 +14,6 @@ export class BuildUI{
       if(!r.ok){this.people.notify(r.reason);this.preview();return;}
       const n=sim.assignBuilders(r.building.id);this.cancel();this.open();this.people.notify(`${BUILD_TYPES[r.building.kind].name}: ${n} constructores libres asignados. Puedes sumar otros desde Tareas.`);this.refresh();onChange();
     };
-    document.addEventListener('keydown',e=>{if(this.kind&&e.key==='Escape'){e.preventDefault();this.cancel();}if(this.kind&&e.key.toLowerCase()==='r'&&!['INPUT','SELECT'].includes(e.target.tagName)){$('rotate-build').click();}});
     this.refresh();
   }
   open(){if(this.kind)this.cancel();document.dispatchEvent(new CustomEvent('sidecity:panel-open',{detail:'build'}));this.people.choose([]);$('build-panel').hidden=false;$('workspace').classList.add('has-build');$('camp-status').setAttribute('aria-expanded','true');this.refresh();$('close-build').focus();}

@@ -1,9 +1,9 @@
-# Punto de continuación · SideCity 0.5
+# Punto de continuación · SideCity 0.6
 
-Conservar el arte aprobado, mapa completo y HUD verde. Estado vigente: docs/SETTLEMENT.md, INVENTORY.md y WORLD.md. Construcción libre de varios refugios y puentes por vista previa, materiales reservados y aportaciones independientes. Puentes completados abren rutas sobre el agua. Comunidad añade vínculos, hogares, nacimientos y crecimiento de niños. Esquema 5 migra 1–4; población máxima de prototipo 12. Los tres fundadores originales permanecen.
+Cámara de ocho orientaciones: giro suave, proyección coherente para selección, obras, rutas, zoom y minimapa. Modelos originales con volumen y colores planos conservan el aspecto ilustrado. Personajes retocados con cambios pequeños. Menús contextuales, controles por función configurables y distribución móvil compacta. Ver docs/CAMERA.md.
 
-Cuatro accesos: Terreno / Construir / Almacén / Comunidad; cámara aparte. Solo una ficha a la vez. npm start abre el servidor local; npm test verifica 51 reglas; npm run build prepara dist. La identidad de Sites está en .openai/hosting.json: no crear otro Site para actualizar. GitHub privado sukyozumaru/SideCity.
+Se conservan construcción libre, puentes transitables, recursos, oficios, familias y esquema de guardado 5 con migración de 1–4. Cuatro destinos: Terreno / Construir / Almacén / Comunidad; un inspector visible. npm start, npm test (57 pruebas), npm run build. Sin dependencias externas. GitHub sukyozumaru/SideCity ya es público por petición expresa del usuario.
 
-El usuario rechazó el identificador personal en la URL de Sites. Cambiar el slug no lo quita. Se ofreció Vercel para una dirección neutral, pero falta conexión confirmada; también puede usarse un dominio propio. No afirmar que la URL ya cambió, no ampliar la audiencia ni gastar en dominios sin instrucción. Mantener la versión actual disponible mientras se resuelve.
+Sites usa el project_id de .openai/hosting.json; conservar identidad y audiencia. El usuario rechazó conectar Vercel: no volver a sugerirlo sin una nueva petición. Esta actualización mantiene el enlace existente. No afirmar que su dirección ha cambiado ni alterar el acceso del sitio por hacer público GitHub.
 
-Próximos bloques: fundición/agricultura con desbloqueos reales; demolición/traslado de construcciones; relaciones más profundas y ciclo vital. Safari/iPhone físico y rendimiento allí siguen pendientes.
+Próximos bloques pendientes: fundición/agricultura, demolición/traslado, relaciones más profundas y ciclo vital. No añadirlos sin definir el siguiente bloque con el usuario. Safari/iPhone físico y rendimiento real allí siguen pendientes.

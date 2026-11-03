@@ -1,63 +1,43 @@
-import { TASKS } from './simulation.js';
-export function drawColonist(c, person, point, options) {
-  const { selected, zoom, time, reducedMotion, socialTarget } = options;
-  const moving = person.job?.path.length > 0, kind = person.job?.kind;
-  const working = kind && !moving && person.state === TASKS[kind]?.action;
-  const seated = working && kind === 'rest', sleeping = working && kind === 'sleep';
-  const phase = reducedMotion ? 0 : time / (moving ? 115 : 260) + [...person.id].reduce((n,c)=>n+c.charCodeAt(0),0)*.17;
-  const face = person.direction.x - person.direction.y >= 0 ? 1 : -1;
-  const ellipse = (x, y, rx, ry, color) => { c.fillStyle = color; c.beginPath(); c.ellipse(x,y,rx,ry,0,0,Math.PI*2); c.fill(); };
-  const stroke = (points, color, width) => { c.strokeStyle=color; c.lineWidth=width; c.beginPath();points.forEach((p,i)=>i?c.lineTo(...p):c.moveTo(...p));c.stroke(); };
-  c.save(); c.translate(point.x,point.y); c.lineCap='round';
-  if(person.stage==='child')c.scale(.7,.7);
-  ellipse(3,1,13,5,'#294f3738');
-  if(selected){c.strokeStyle='#f9fbe7';c.lineWidth=2/zoom;c.beginPath();c.ellipse(0,0,18,8,0,0,Math.PI*2);c.stroke();}
-  c.save(); c.scale(face,1);
-  if(sleeping){
-    ellipse(0,0,23,9,'#a79b70');ellipse(3,-4,19,8,person.color);ellipse(-20,-6,7,7,'#d7ae82');ellipse(-23,-9,5,5,person.hair);
-    stroke([[-18,-7],[-15,-7]],'#493c30',1);
-  }else{
-    const crouching=working&&['foraging','scavenge','drink'].includes(kind);
-    if(crouching)c.translate(0,8);
-    if(seated)c.translate(0,13);
-    const stride=moving?Math.sin(phase)*5:0,bob=moving?Math.abs(Math.sin(phase))*1.5:!reducedMotion&&!working?Math.sin(phase*.6)*.45:0;
-    c.translate(0,-bob);
-    if(crouching)c.scale(1,.83);
-    if(working&&kind==='logging')c.rotate(Math.sin(phase*3)*.045);
-    if(seated){stroke([[-4,-16],[-13,-10],[-16,-3]],'#4b4436',5);stroke([[4,-16],[13,-10],[16,-3]],'#4b4436',5);}
-    else{stroke([[-4,-15],[-5+stride,-2]],'#4b4436',5);stroke([[4,-15],[5-stride,-2]],'#4b4436',5);}
-    c.fillStyle=person.color;c.beginPath();c.moveTo(-8,-34);c.lineTo(7,-34);c.lineTo(9,-14);c.lineTo(-8,-14);c.closePath();c.fill();
-    c.fillStyle='#2d403327';c.fillRect(1,-33,6,18);
-    const arm=working?Math.sin(phase*3)*6:stride;
-    stroke([[-8,-31],[-12-arm*.4,-21-(working?6:0)]],'#d4ac7e',4);
-    stroke([[8,-31],[12+arm*.5,kind==='drink'&&working?-38:-20-(working?8:0)]],'#d4ac7e',4);
-    ellipse(0,-40,7.5,9,'#d7ae82');ellipse(-1,-45,8,5.5,person.hair);
-    if(person.id!=='ivo')ellipse(-7,-39,3.5,8,person.hair);
-    c.fillStyle='#413a2e';c.fillRect(3,-41,1.2,1.5);stroke([[-7,-16],[8,-16]],'#7b6545',2);
-    if(working&&['logging','mining','building','shelter','bridge','craftAxe','craftPick'].includes(kind)){
-      c.save();c.translate(14,-26);c.rotate(-.4+Math.sin(phase*3)*.5);stroke([[0,8],[0,-12]],'#776047',3);c.fillStyle=kind==='logging'?'#8f9787':'#b69667';c.fillRect(-2,-14,11,7);c.restore();
-    }
-    if(working&&kind==='foraging'){ellipse(15,-29,3,2.5,'#b96956');}
-    if(working&&kind==='study'){ellipse(12,-26,5,3.5,'#9da18a');stroke([[8,-25],[14,-30]],'#c0bd9b',1);}
-    if(working&&kind==='drink'){ellipse(12,-38,4,2,'#7baeb0');}
-    if(working&&kind==='eat'){ellipse(13,-29,5,3,'#b69c6e');ellipse(12,-32,2,2,'#be7861');}
-    if(working&&kind==='scavenge'){stroke([[10,-25],[19,-29]],'#af9565',2);ellipse(17,-23,3,2,'#a5a58e');}
-    if(working&&kind==='cooking'){stroke([[10,-27],[19,-19]],'#796244',2);ellipse(18,-18,6,3,'#8e7957');}
+import {TASKS} from './simulation.js';
+import {projectView} from './projection.js';
+import {box,ellipsoid,drawMesh,drawLine3D} from './mesh-art.js';
+export function drawColonist(c,person,point,options){
+ const{selected,zoom,time,reducedMotion,socialTarget,view=0}=options,kind=person.job?.kind,moving=!!person.job?.path.length,working=!!kind&&!moving&&person.state===TASKS[kind]?.action;
+ const sleeping=working&&kind==='sleep',seated=working&&kind==='rest',crouch=working&&['foraging','scavenge','drink'].includes(kind);
+ const phase=reducedMotion?0:time/(moving?115:260)+[...person.id].reduce((n,a)=>n+a.charCodeAt(0),0)*.17;
+ const len=Math.hypot(person.direction.x,person.direction.y)||1,dx=person.direction.x/len,dy=person.direction.y/len;
+ const project=(side,forward,z=0)=>projectView(-dy*side+dx*forward,dx*side+dy*forward,view,z);
+ const ellipse=(x,y,rx,ry,color)=>{c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();};
+ const line=(a,b,color,width)=>drawLine3D(c,a,b,project,color,width);
+ c.save();c.translate(point.x,point.y);if(person.stage==='child')c.scale(.7,.7);
+ ellipse(3,1,13,5,'#294f3738');
+ if(selected){c.strokeStyle='#f9fbe7';c.lineWidth=2/zoom;c.beginPath();c.ellipse(0,0,18,8,0,0,Math.PI*2);c.stroke();}
+ if(sleeping){drawMesh(c,[...ellipsoid(0,0,5,.20,.48,7,'#a79b70'),...ellipsoid(0,.08,10,.18,.34,8,person.color),...ellipsoid(0,-.42,12,.12,.12,7,'#d7ae82'),...ellipsoid(0,-.47,16,.13,.09,4,person.hair)],project);}
+ else{
+  const bob=moving&&!reducedMotion?Math.abs(Math.sin(phase))*1.5:0,stride=moving?Math.sin(phase)*.14:0,base=seated?9:crouch?12:16,head=base+26+bob;
+  for(const sign of[-1,1]){const foot=seated?[sign*.2,.18,2]:[sign*.085,sign*stride,2];line([sign*.075,0,base+bob],foot,'#4b4436',5);}
+  const swing=working?Math.sin(phase*3)*6:stride*24,handZ=['drink','eat'].includes(kind)&&working?head-3:base+6+(working?6:0)+swing;
+  line([-.16,0,base+17+bob],[-.21,working?.14:-stride*.5,base+4+(working?6:0)],'#d4ac7e',4);
+  line([.16,0,base+17+bob],[.22,working?.22:stride*.5,handZ],'#d4ac7e',4);
+  const faces=[...ellipsoid(0,0,base+10+bob,.165,.105,11,person.color,8,4),...ellipsoid(0,0,head,.135,.12,8,'#d7ae82'),...ellipsoid(0,-.018,head+5,.145,.125,4.5,person.hair)];
+  if(person.hair!=='#70513b')faces.push(...ellipsoid(-.10,-.055,head-2,.06,.085,7,person.hair));
+  drawMesh(c,faces,project);
+  const yaw=Math.PI/4+view*Math.PI/4;if(dx*Math.sin(yaw)+dy*Math.cos(yaw)>.12)for(const sign of[-1,1]){const p=project(sign*.055,.112,head);ellipse(p.x,p.y,1,1.1,'#413a2e');}
+  line([-.15,0,base+2],[.15,0,base+2],'#7b6545',2);
+  if(working&&['logging','mining','building','shelter','bridge','craftAxe','craftPick'].includes(kind)){
+   line([.22,.22,handZ-7],[.22,.25,handZ+11],'#8e744f',3);
+   drawMesh(c,box(.24,.25,handZ+8,kind==='mining'?.28:.17,.09,kind==='mining'?4:7,kind==='logging'||kind==='mining'?'#9ca38e':'#b69667'),project);
   }
-  c.restore();
-  if(working&&['logging','mining','shelter','bridge'].includes(kind)&&!reducedMotion){
-    for(let i=0;i<3;i++){const t=(time/650+i*.29)%1;c.globalAlpha=1-t;ellipse(15+t*(i%2?13:-9),-17-t*18,1.7,1.1,kind==='mining'?'#c0c1a8':'#d0b582');}c.globalAlpha=1;
-  }
-  if(working&&kind==='drink'&&!reducedMotion){c.strokeStyle='#c2e0d1';c.lineWidth=1;c.beginPath();c.ellipse(10,2,6+(time/80%5),2,0,0,Math.PI*2);c.stroke();}
-  if((working&&kind==='social')||socialTarget){
-    c.fillStyle='#e3e8cf';c.beginPath();c.roundRect(13,-61,23,14,4);c.fill();c.beginPath();c.moveTo(16,-48);c.lineTo(14,-43);c.lineTo(22,-48);c.fill();for(let i=0;i<3;i++)ellipse(19+i*5,-54,1.2,1.2,'#526a4c');
-  }
-  if(person.stage==='child')c.scale(1/.7,1/.7);
-  if(selected||zoom>.65){
-    const top=(sleeping||seated?-36:person.stage==='child'?-48:-64)-(options.labelLift||0);c.font=`600 ${11/zoom}px system-ui`;c.textAlign='center';c.textBaseline='bottom';const width=c.measureText(person.name).width;
-    c.fillStyle='#253e32';c.fillRect(-width/2-5/zoom,top-16/zoom,width+10/zoom,19/zoom);c.fillStyle='#edf1e4';c.fillText(person.name,0,top+1);
-  }
-  if(sleeping){c.fillStyle='#dbe4be';c.font=`${12/zoom}px system-ui`;c.fillText('z',24,-16-(reducedMotion?0:Math.sin(phase)*3));}
-  if(selected&&working&&!['rest','sleep','drink','social'].includes(kind)){c.fillStyle='#a4bf7e';c.fillRect(-15,-55,30*Math.min(options.progress,1),3);}
-  c.restore();
+  if(working&&['foraging','eat'].includes(kind))drawMesh(c,ellipsoid(.21,.23,handZ,.055,.055,3,'#b96956',5,3),project);
+  if(working&&kind==='scavenge')line([.18,.18,handZ],[.27,.37,handZ+2],'#af9565',2);
+  if(working&&kind==='study')drawMesh(c,ellipsoid(.21,.20,handZ,.09,.065,4,'#9da18a',6,3),project);
+  if(working&&kind==='drink')drawMesh(c,box(.22,.22,handZ-2,.10,.10,4,'#7baeb0'),project);
+  if(working&&kind==='cooking'){line([.22,.20,handZ],[.27,.42,handZ-5],'#796244',2);drawMesh(c,ellipsoid(.27,.42,handZ-6,.10,.10,3,'#8e7957',7,3),project);}
+ }
+ if(working&&['logging','mining','shelter','bridge'].includes(kind)&&!reducedMotion)for(let i=0;i<3;i++){const t=(time/650+i*.29)%1;c.globalAlpha=1-t;ellipse(15+t*(i%2?13:-9),-17-t*18,1.7,1.1,kind==='mining'?'#c0c1a8':'#d0b582');}c.globalAlpha=1;
+ if((working&&kind==='social')||socialTarget){c.fillStyle='#e3e8cf';c.beginPath();c.roundRect(13,-61,23,14,4);c.fill();for(let i=0;i<3;i++)ellipse(19+i*5,-54,1.2,1.2,'#526a4c');}
+ if(person.stage==='child')c.scale(1/.7,1/.7);
+ if(selected||zoom>.65){const top=(sleeping||seated?-36:person.stage==='child'?-48:-64)-(options.labelLift||0);c.font=`600 ${11/zoom}px system-ui`;c.textAlign='center';c.textBaseline='bottom';const width=c.measureText(person.name).width;c.fillStyle='#253e32';c.fillRect(-width/2-5/zoom,top-16/zoom,width+10/zoom,19/zoom);c.fillStyle='#edf1e4';c.fillText(person.name,0,top+1);}
+ if(sleeping){c.fillStyle='#dbe4be';c.font=`${12/zoom}px system-ui`;c.fillText('z',24,-16-(reducedMotion?0:Math.sin(phase)*3));}
+ if(selected&&working&&!['rest','sleep','drink','social'].includes(kind)){c.fillStyle='#a4bf7e';c.fillRect(-15,-55,30*Math.min(options.progress,1),3);}c.restore();
 }

@@ -2,8 +2,8 @@ import { project } from './core.js';
 import { buildingTiles } from './construction.js';
 import { drawShelter } from './camp-renderer.js';
 const poly=(c,points,fill,stroke)=>{c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.stroke();}};
-export function drawBridge(c,b){
-  if(!b.reserved)return;const pt=(x,y,h=8)=>{const p=project(x,y);return{x:p.x,y:p.y-h};},xAxis=b.axis.endsWith('x');
+export function drawBridge(c,b,projector=project){
+  if(!b.reserved)return;const pt=(x,y,h=8)=>{const p=projector(x,y);return{x:p.x,y:p.y-h};},xAxis=b.axis.endsWith('x');
   const p=(along,across,h)=>xAxis?pt(b.x+along,b.y+across,h):pt(b.x+across,b.y+along,h),length=xAxis?b.width:b.height;
   const line=(a,z,color,width=2)=>{c.strokeStyle=color;c.lineWidth=width;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(z.x,z.y);c.stroke();};
   c.save();c.lineJoin='round';
@@ -22,10 +22,10 @@ export function drawBridge(c,b){
   if(!b.complete){const q=p(length/2,.5,50);c.fillStyle='#253e32';c.fillRect(q.x-36,q.y,72,5);c.fillStyle='#b7cf92';c.fillRect(q.x-36,q.y,72*b.progress,5);}
   c.restore();
 }
-export function drawPlacement(c,draft,zoom){
+export function drawPlacement(c,draft,zoom,projector=project){
   if(!draft)return;c.save();const color=draft.ok?'#c0d59a':'#d2a28a';c.lineWidth=2/zoom;
-  for(const t of buildingTiles(draft)){poly(c,[project(t.x,t.y),project(t.x+1,t.y),project(t.x+1,t.y+1),project(t.x,t.y+1)],draft.ok?'#a4bf7e55':'#b77d6555',color);}
-  if(draft.kind==='shelter'){c.globalAlpha=.45;drawShelter(c,{...draft,reserved:true,complete:true,progress:1});}
-  else if(draft.span){c.globalAlpha=.6;drawBridge(c,{...draft,reserved:true,complete:true,progress:1});}
+  for(const t of buildingTiles(draft)){poly(c,[projector(t.x,t.y),projector(t.x+1,t.y),projector(t.x+1,t.y+1),projector(t.x,t.y+1)],draft.ok?'#a4bf7e55':'#b77d6555',color);}
+  if(draft.kind==='shelter'){c.globalAlpha=.45;drawShelter(c,{...draft,reserved:true,complete:true,progress:1},false,projector);}
+  else if(draft.span){c.globalAlpha=.6;drawBridge(c,{...draft,reserved:true,complete:true,progress:1},projector);}
   c.restore();
 }

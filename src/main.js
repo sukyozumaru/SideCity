@@ -6,6 +6,10 @@ import { WorldUI } from './world-ui.js';
 import { InventoryUI } from './inventory-ui.js';
 import { BuildUI } from './build-ui.js';
 import { CommunityUI } from './community-ui.js';
+import { ContextUI } from './context-ui.js';
+import { ControlsUI } from './controls-ui.js';
+import { InputActions,ACTIONS,keyLabel } from './input-actions.js';
+import { VIEW_NAMES } from './projection.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('world'), viewport = $('viewport');
@@ -14,7 +18,7 @@ const world = createWorld(Number.isInteger(requestedSeed)&&requestedSeed>0&&requ
 const renderer = new Renderer(canvas, $('minimap'), world, camera);
 const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
 renderer.reducedMotion = motionPreference.matches;
-motionPreference.addEventListener('change', e => { renderer.reducedMotion = e.matches; invalidate(); });
+motionPreference.addEventListener('change',e=>{renderer.reducedMotion=e.matches;applyControls();invalidate();});
 let dirty = true, lastDraw = 0, saveTimer;
 const invalidate = () => { dirty = true; };
 let storage;
@@ -27,6 +31,9 @@ const worldUI=new WorldUI(simulation,renderer,peopleUI,persist,invalidate,candid
 const inventoryUI=new InventoryUI(simulation,peopleUI,invalidate);
 const buildUI=new BuildUI(simulation,renderer,peopleUI,invalidate);
 const communityUI=new CommunityUI(simulation,peopleUI,invalidate);
+const contextUI=new ContextUI(simulation,renderer,peopleUI,invalidate);
+const controlsUI=new ControlsUI(applyControls);
+const input=new InputActions(controlsUI.settings,runAction);
 $('open-building-menu').onclick=()=>buildUI.open();
 let paused = false, speed = 1, accumulator = 0, previousTime = 0, lastUI = 0, lastSave = 0, savedRevision = -1;
 if (loaded.blocked) { $('save-status').textContent = 'Guardado protegido'; peopleUI.notify('El guardado no se pudo leer. Conservamos sus datos; esta sesión no los sobrescribirá.'); }
@@ -42,10 +49,13 @@ $('sim-speed').onclick = () => { speed = speed === 1 ? 3 : 1; $('sim-speed').tex
 function saveView() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
-    try { localStorage.setItem(`sidecity-camera-v1-${world.seed}`, JSON.stringify({ seed: world.seed, x: camera.x, y: camera.y, zoom: camera.zoom, grid: renderer.grid })); } catch { /* Camera preferences are optional; terrain remains usable. */ }
+    try { localStorage.setItem(`sidecity-camera-v1-${world.seed}`, JSON.stringify({ seed: world.seed, x: camera.x, y: camera.y, zoom: camera.zoom, view:camera.view, grid: renderer.grid })); } catch { /* Camera preferences are optional; terrain remains usable. */ }
   }, 250);
 }
+function updateCompass(){const north=camera.projectGrid(0,-1);$('compass-arrow').style.transform=`rotate(${Math.atan2(north.x,-north.y)*180/Math.PI}deg)`;}
 function updateCamera() {
+  $('camera-direction').value=VIEW_NAMES[camera.view].split(' ').at(-1);$('camera-mode').textContent=camera.view%2?'Frontal':'Isométrica';$('camera-direction').setAttribute('aria-label',VIEW_NAMES[camera.view]);
+  updateCompass();
   $('zoom-label').value = `${Math.round(camera.zoom * 100)}%`;
   $('zoom-in').disabled = camera.zoom >= camera.maxZoom;
   $('zoom-out').disabled = camera.zoom <= camera.minZoom;
@@ -56,37 +66,39 @@ function cellAt(x, y) {
   return world.get(Math.floor(q.x), Math.floor(q.y));
 }
 function clearSelection() { renderer.selected = null; $('parcel').hidden = true; invalidate(); }
-function select(x, y) {
-  if(buildUI.kind){buildUI.select(cellAt(x,y));return;}
-  inventoryUI.close();
-  if (peopleUI.tap(x, y)) return;
-  const tile = cellAt(x, y);
-  if(tile&&!simulation.isUnlocked(tile.x,tile.y)){worldUI.inspect(tile);return;}
-  if (peopleUI.selected.length) { peopleUI.interact(x, y); return; }
-  renderer.selected = tile;
-  $('parcel').hidden = !tile;
-  if (!tile) { invalidate(); return; }
-  const name = tile.type === 'water' ? 'Río' : tile.type === 'bank' ? 'Ribera' : tile.tree ? 'Arboleda' : 'Pradera';
-  $('parcel-name').textContent = name;
-  $('parcel-description').textContent = tile.type === 'water' ? 'El río cruza el valle. Esta parcela está cubierta de agua.' : tile.type === 'bank' ? 'Una franja de tierra y juncos junto al agua.' : tile.tree ? 'Vegetación del valle. Un lugar para conservar o integrar en el futuro barrio.' : 'Terreno despejado. Aquí empieza a tomar forma tu próximo barrio.';
-  $('parcel-coordinates').textContent = `${tile.x + 1} / ${tile.y + 1}`;
-  $('parcel-state').textContent = tile.type === 'water' ? 'Agua' : tile.type === 'bank' ? 'Orilla natural' : tile.tree ? 'Con vegetación' : 'Despejado';
-  $('status').textContent = `${name}. Parcela ${tile.x + 1}, ${tile.y + 1}.`;
-  worldUI.inspect(tile);
-  invalidate();
+function select(x,y,forceContext=false){
+ if(buildUI.kind&&!forceContext){buildUI.select(cellAt(x,y));return;}
+ if(!forceContext&&peopleUI.tap(x,y))return;
+ const target=contextUI.pick(x,y,forceContext);if(!target)return;
+ if(target.type==='locked'){document.dispatchEvent(new CustomEvent('sidecity:panel-open',{detail:'parcel'}));worldUI.inspect(world.get(target.x,target.y));invalidate();return;}
+ if(target.type==='ground'&&!forceContext&&peopleUI.selected.length){peopleUI.order('move',{x:target.x,y:target.y});return;}
+ if(controlsUI.settings.quickOrders&&!forceContext&&peopleUI.selected.length){contextUI.quick(target,[...peopleUI.selected]);return;}
+ contextUI.open(target);
 }
+peopleUI.onInteract=(x,y)=>{select(x,y);return true;};
+function applyControls(){input.settings=controlsUI.settings;gestures.dragSpeed=controlsUI.settings.dragSpeed;gestures.zoomSpeed=controlsUI.settings.zoomSpeed;camera.smoothRotation=controlsUI.settings.smoothRotation&&!motionPreference.matches;if(!camera.smoothRotation&&camera.rotating)camera.setView(camera.view,{animate:false});for(const [button,action] of Object.entries({"rotate-left":"rotateLeft","rotate-right":"rotateRight",home:"resetView",fit:"fitView",grid:"grid","zoom-in":"zoomIn","zoom-out":"zoomOut","controls-open":"controls"}))$(button).title=`${ACTIONS[action].name} · ${keyLabel(controlsUI.settings.bindings[action])}`;updateCamera();}
+function runAction(id){
+ const actions={rotateLeft:()=>{camera.rotate(-1);updateCamera();},rotateRight:()=>{camera.rotate(1);updateCamera();},resetView:()=>{camera.home();updateCamera();},fitView:()=>{camera.fit();updateCamera();},zoomIn:()=>zoomBy(1.25),zoomOut:()=>zoomBy(.8),grid:()=>{renderer.grid=!renderer.grid;$('grid').setAttribute('aria-pressed',String(renderer.grid));updateCamera();},build:()=>buildUI.open(),stock:()=>inventoryUI.open(),community:()=>communityUI.open(),controls:()=>{input.clear();gestures.cancelAll();controlsUI.open();},pause:()=>$('pause-sim').click(),stop:()=>$('stop-work').click(),rotateBuilding:()=>{if(buildUI.kind)$('rotate-build').click();},interact:()=>{if(buildUI.kind){if(!$('confirm-placement').disabled)$('confirm-placement').click();}else if(contextUI.target){const button=$('context-actions').querySelector('button');if(button&&!button.disabled)button.click();}else select(camera.width/2,camera.height/2,true);}};
+ if(actions[id])actions[id]();else if(peopleUI.selected.length)peopleUI.order(id);else peopleUI.notify('Selecciona primero a quien hará la tarea.');
+}
+
 const gestures = new Gestures(camera, select);
+const cameraRail=$('camera-controls');
+$('camera-more').onclick=()=>{const expanded=cameraRail.classList.toggle('expanded');$('camera-more').setAttribute('aria-expanded',String(expanded));$('camera-more').setAttribute('aria-label',expanded?'Ocultar más controles de cámara':'Más controles de cámara');};
+document.addEventListener('sidecity:panel-open',()=>{cameraRail.classList.remove('expanded');$('camera-more').setAttribute('aria-expanded','false');});
+let longPressTimer=null,pressPoint=null;
+applyControls();
 function local(e) { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 canvas.addEventListener('pointerdown', e => {
   if (e.button !== 0 && e.pointerType === 'mouse') return;
-  const p = local(e); canvas.setPointerCapture(e.pointerId); gestures.down(e.pointerId, p.x, p.y); canvas.classList.add('dragging'); canvas.focus({ preventScroll: true });
+  const p=local(e);clearTimeout(longPressTimer);pressPoint=p;if(e.pointerType==='touch'&&gestures.points.size===0)longPressTimer=setTimeout(()=>{if(gestures.points.size===1&&!gestures.tap?.moved){gestures.cancelAll();canvas.classList.remove('dragging');select(p.x,p.y,true);}},550); canvas.setPointerCapture(e.pointerId); gestures.down(e.pointerId, p.x, p.y); canvas.classList.add('dragging'); canvas.focus({ preventScroll: true });
 });
 canvas.addEventListener('pointermove', e => {
-  const p = local(e); gestures.move(e.pointerId, p.x, p.y);
+  const p=local(e);if(pressPoint&&Math.hypot(p.x-pressPoint.x,p.y-pressPoint.y)>6)clearTimeout(longPressTimer); gestures.move(e.pointerId, p.x, p.y);
   renderer.hover = e.pointerType === 'mouse' && !gestures.points.size ? cellAt(p.x, p.y) : null;
   if (gestures.points.size) updateCamera(); else invalidate();
 });
-function end(e, cancelled = false) {
+function end(e,cancelled=false){clearTimeout(longPressTimer);
   if (!gestures.points.has(e.pointerId)) return;
   const p = local(e); gestures.up(e.pointerId, p.x, p.y, cancelled);
   if (!gestures.points.size) canvas.classList.remove('dragging');
@@ -96,17 +108,13 @@ canvas.addEventListener('pointerup', e => end(e));
 canvas.addEventListener('pointercancel', e => end(e, true));
 canvas.addEventListener('lostpointercapture', e => end(e, true));
 canvas.addEventListener('pointerleave', () => { renderer.hover = null; invalidate(); });
-window.addEventListener('blur', () => { gestures.cancelAll(); canvas.classList.remove('dragging'); });
+window.addEventListener('blur',()=>{clearTimeout(longPressTimer);input.clear();gestures.cancelAll();canvas.classList.remove('dragging');});
+canvas.addEventListener('contextmenu',e=>{e.preventDefault();const p=local(e);select(p.x,p.y,true);});
 canvas.addEventListener('wheel', e => {
   e.preventDefault(); const p = local(e), delta = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? camera.height : 1);
-  camera.zoomAt(camera.zoom * Math.exp(-delta * .0015), p.x, p.y); updateCamera();
+  camera.zoomAt(camera.zoom * Math.exp(-delta*.0015*controlsUI.settings.zoomSpeed*(controlsUI.settings.invertWheel?-1:1)), p.x, p.y); updateCamera();
 }, { passive: false });
 function zoomBy(factor) { camera.zoomAt(camera.zoom * factor, camera.width / 2, camera.height / 2); updateCamera(); }
-$('zoom-in').onclick = () => zoomBy(1.25);
-$('zoom-out').onclick = () => zoomBy(.8);
-$('home').onclick = () => { camera.home(); updateCamera(); };
-$('fit').onclick = () => { camera.fit(); updateCamera(); };
-$('grid').onclick = () => { renderer.grid = !renderer.grid; $('grid').setAttribute('aria-pressed', String(renderer.grid)); $('grid').classList.toggle('active', renderer.grid); invalidate(); saveView(); };
 $('explore').onclick = () => { buildUI.close();communityUI.close();inventoryUI.close();peopleUI.choose([]); clearSelection(); canvas.focus(); };
 $('close-parcel').onclick = clearSelection;
 $('minimap').addEventListener('pointerdown', e => {
@@ -116,15 +124,14 @@ $('minimap').addEventListener('pointerdown', e => {
   camera.bound(); updateCamera();
 });
 $('minimap').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); camera.fit(); updateCamera(); } });
-canvas.addEventListener('keydown', e => {
-  const movement = { ArrowLeft: [60, 0], ArrowRight: [-60, 0], ArrowUp: [0, 60], ArrowDown: [0, -60] }[e.key];
-  if (movement) { e.preventDefault(); camera.pan(...movement); updateCamera(); }
-  if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomBy(1.25); }
-  if (e.key === '-') { e.preventDefault(); zoomBy(.8); }
-  if (e.key === 'Home') { e.preventDefault(); camera.home(); updateCamera(); }
-  if (e.key === 'Escape') { peopleUI.choose([]); clearSelection(); }
-  if (e.key === 'Enter') select(camera.width / 2, camera.height / 2);
+document.addEventListener('keydown',e=>{
+ if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||document.querySelector('dialog[open]')||e.target.closest('input,select,textarea,[contenteditable="true"]'))return;
+ if(e.key==='Escape'){e.preventDefault();if(contextUI.target)contextUI.close(true);else{buildUI.close();communityUI.close();inventoryUI.close();peopleUI.choose([]);clearSelection();}input.clear();return;}
+ if(e.key==='Enter'&&e.target===canvas){e.preventDefault();runAction('interact');return;}
+ if(e.code==='Space'&&e.target.closest('button'))return;
+ if(input.press(e.code,e.repeat))e.preventDefault();
 });
+document.addEventListener('keyup',e=>input.release(e.code));
 $('help').onclick = () => { gestures.cancelAll(); $('help-dialog').showModal(); };
 for (const id of ['close-help', 'start-exploring']) $(id).onclick = () => $('help-dialog').close();
 new ResizeObserver(() => { gestures.cancelAll(); renderer.resize(viewport.clientWidth, viewport.clientHeight); camera.bound(); updateCamera(); }).observe(viewport);
@@ -132,19 +139,22 @@ renderer.resize(viewport.clientWidth, viewport.clientHeight); camera.home();
 try {
   const saved = JSON.parse(localStorage.getItem(`sidecity-camera-v1-${world.seed}`)||localStorage.getItem('sidecity-camera-v1'));
   if (saved?.seed === world.seed && [saved.x, saved.y, saved.zoom].every(Number.isFinite)) {
-    camera.x = saved.x; camera.y = saved.y; camera.zoom = clamp(saved.zoom, camera.minZoom, camera.maxZoom); camera.bound(); renderer.grid = saved.grid === true;
+    camera.setView(Number.isInteger(saved.view)&&saved.view>=0&&saved.view<8?saved.view:0,{animate:false});camera.x = saved.x; camera.y = saved.y; camera.zoom = clamp(saved.zoom, camera.minZoom, camera.maxZoom); camera.bound(); renderer.grid = saved.grid === true;
     $('grid').setAttribute('aria-pressed', String(renderer.grid)); $('grid').classList.toggle('active', renderer.grid);
   }
 } catch { /* Invalid view preferences fall back to the meadow. */ }
 updateCamera();
+for(const[id,action]of Object.entries({"rotate-left":"rotateLeft","rotate-right":"rotateRight",home:"resetView",fit:"fitView",grid:"grid","zoom-in":"zoomIn","zoom-out":"zoomOut","camp-status":"build","stock-open":"stock","community-open":"community","controls-open":"controls"}))$(id).onclick=()=>runAction(action);
 function frame(time) {
   const dt = previousTime ? Math.min((time - previousTime) / 1000, .25) : 0; previousTime = time;
-  if (!document.hidden && !paused && !$('help-dialog').open && !$('world-dialog').open && !$('era-dialog').open) {
+  if(camera.update(dt)){updateCompass();invalidate();}
+  if(document.querySelector('dialog[open]'))input.clear();else if(!document.hidden){const pan=input.pan(dt);if(pan.x||pan.y){camera.pan(pan.x,pan.y);updateCamera();}}
+  if (!document.hidden && !paused && !$('help-dialog').open && !$('world-dialog').open && !$('era-dialog').open && !$('controls-dialog').open) {
     accumulator += dt * speed;
     while (accumulator >= .1) { simulation.update(.1); accumulator -= .1; }
   }
   if (!document.hidden && time - lastUI >= 200) {
-    peopleUI.refresh(); worldUI.refresh(); inventoryUI.refresh(); buildUI.refresh();communityUI.refresh(); lastUI = time;
+    peopleUI.refresh(); worldUI.refresh(); inventoryUI.refresh(); buildUI.refresh();communityUI.refresh();contextUI.refresh(); lastUI = time;
     if (simulation.events.length) peopleUI.notify(simulation.events.splice(0).join(' '));
   }
   if (time - lastSave >= 5000 || simulation.revision !== savedRevision && time - lastSave >= 750) { persist(); lastSave = time; }
@@ -152,6 +162,6 @@ function frame(time) {
   if (!document.hidden && (dirty || animated || !renderer.reducedMotion && time - lastDraw >= 65)) { renderer.draw(time); dirty = false; lastDraw = time; }
   requestAnimationFrame(frame);
 }
-document.addEventListener('visibilitychange', () => { gestures.cancelAll(); canvas.classList.remove('dragging'); previousTime = 0; accumulator = 0; if (document.hidden) persist(); invalidate(); });
+document.addEventListener('visibilitychange', () => { input.clear();gestures.cancelAll(); canvas.classList.remove('dragging'); previousTime = 0; accumulator = 0; if (document.hidden) persist(); invalidate(); });
 window.addEventListener('pagehide', persist);
 requestAnimationFrame(frame);
