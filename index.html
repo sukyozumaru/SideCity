@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#e5ebe5">
+  <title>SideCity · Valle del río</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%232b5645' d='M16 2 31 10v12L16 30 1 22V10z'/%3E%3Cpath fill='%2397bb7c' d='m16 2 15 8-15 8L1 10z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="identity"><svg class="mark" viewBox="0 0 32 36" aria-hidden="true"><path fill="#315d49" d="m16 2 15 8v14l-15 9-15-9V10z"/><path fill="#a7bf86" d="m16 2 15 8-15 9L1 10z"/><path fill="none" stroke="#e5ebe5" stroke-width="1.4" d="m8 6 16 9M8 15l16-9M16 19v14"/></svg><h1>SideCity</h1><span class="world-name">Valle del río</span></div>
+    <div class="header-actions"><span class="dimensions">48 × 48 parcelas</span><button id="help" class="icon-button" aria-label="Ayuda" title="Ayuda">?</button></div>
+  </header>
+  <main id="viewport" aria-label="Terreno de SideCity">
+    <canvas id="world" tabindex="0" aria-label="Mapa isométrico. Arrastra para explorar, usa dos dedos o la rueda para acercar y toca una parcela para inspeccionarla."></canvas>
+    <div class="place-label" aria-hidden="true"><span class="north">N</span><svg viewBox="0 0 40 40"><path d="m20 3 8 28-8-6-8 6z" fill="#456153"/><path d="M20 3v22l8 6z" fill="#aab7aa"/></svg></div>
+    <aside id="parcel" class="parcel" aria-label="Parcela seleccionada" hidden>
+      <div class="parcel-heading"><h2 id="parcel-name">Pradera</h2><button id="close-parcel" class="icon-button" aria-label="Cerrar selección">×</button></div>
+      <p id="parcel-description"></p><dl><div><dt>Parcela</dt><dd id="parcel-coordinates"></dd></div><div><dt>Terreno</dt><dd id="parcel-state"></dd></div></dl>
+    </aside>
+    <div class="zoom-controls" aria-label="Cámara"><button id="zoom-in" aria-label="Acercar" title="Acercar (+)">+</button><output id="zoom-label" aria-label="Nivel de zoom">100%</output><button id="zoom-out" aria-label="Alejar" title="Alejar (−)">−</button><button id="home" aria-label="Volver al punto inicial" title="Volver al inicio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10 12 3l8 7M6 9v11h12V9M10 20v-6h4v6"/></svg></button></div>
+    <div class="overview" id="overview"><canvas id="minimap" width="192" height="112" tabindex="0" aria-label="Vista general. Toca para mover la cámara a ese lugar."></canvas><span>Valle del río</span></div>
+    <p class="gesture-hint" id="gesture-hint">Arrastra para explorar <span>·</span> Toca una parcela</p>
+    <p id="status" class="sr-only" role="status" aria-live="polite"></p>
+  </main>
+  <footer class="toolbar" aria-label="Herramientas del terreno">
+    <div class="tools"><button id="explore" class="tool active" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 6-2 6 3v15l-6-3-6 3-6-3V2l6 2Zm0 0v16M15 2v15"/></svg><span>Explorar</span></button><button id="grid" class="tool" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg><span>Cuadrícula</span></button><button id="fit" class="tool"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M7 12h10M12 7v10"/></svg><span>Vista completa</span></button></div>
+    <span class="territory-status"><span class="status-dot"></span>Un lugar para empezar</span>
+  </footer>
+  <dialog id="help-dialog"><button id="close-help" class="icon-button dialog-close" aria-label="Cerrar ayuda">×</button><h2>Explora tu próximo barrio.</h2><p>El valle empieza vacío. En esta primera etapa puedes recorrer el terreno e inspeccionar sus parcelas.</p><dl class="help-list"><div><dt>Mover</dt><dd>Arrastra con un dedo o con el ratón. También puedes usar las flechas.</dd></div><div><dt>Acercar</dt><dd>Pellizca con dos dedos, usa la rueda o los botones + y −.</dd></div><div><dt>Inspeccionar</dt><dd>Toca una parcela. Escape cierra la selección.</dd></div><div><dt>Orientarte</dt><dd>Toca el minimapa o elige Vista completa. Inicio vuelve al punto de partida.</dd></div></dl><button id="start-exploring" class="primary">Explorar el valle</button></dialog>
+  <noscript>SideCity necesita JavaScript para mostrar el terreno.</noscript>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

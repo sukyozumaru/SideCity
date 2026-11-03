@@ -1,0 +1,12 @@
+{
+  "direction": "Maqueta urbana viva; aprobada por el usuario el 2026-11-03",
+  "projection": "2:1 isometric; 80x40 drawing units per parcel",
+  "lighting": "upper left",
+  "provenance": "Original vector and Canvas drawings authored in source; no external images, fonts or asset packs",
+  "families": [
+    {"id":"terrain","source":"src/renderer.js","variants":["grass x6","water x3","riverbank x3","soil faces"],"anchor":"parcel vertices","collision":"logical terrain in core.js"},
+    {"id":"trees","source":"src/renderer.js: makeTree","variants":6,"spriteSize":[144,180],"anchor":[72,160],"transparency":true,"collision":"tree flag on logical parcel"},
+    {"id":"details","source":"src/renderer.js","variants":["grass tufts","flowers","stones","reeds","water glints"],"collision":"none"},
+    {"id":"interface","source":"index.html","format":"inline SVG","variants":["parcel mark","map","grid","fit","home","north"],"collision":"none"}
+  ]
+}

@@ -6,7 +6,7 @@ Una maqueta urbana viva: barrios claros, vegetación reconocible y edificios con
 
 ## Mundo 2.5D
 
-- Proyección isométrica 2:1: casilla lógica cuadrada, rombo visual con ancho doble de su alto. Base provisional de 64 × 32 unidades de dibujo, independiente de densidad de pantalla.
+- Proyección isométrica 2:1: casilla lógica cuadrada, rombo visual con ancho doble de su alto. Base de 80 × 40 unidades de dibujo, independiente de densidad de pantalla. Estilo del terreno aprobado por el usuario el 3 de noviembre de 2026.
 - Cámara fija; arrastre y zoom. Posponer rotación para no multiplicar orientaciones de todos los recursos.
 - Luz común desde arriba a la izquierda; fachada iluminada, lateral más oscuro y sombra de contacto consistente. Las sombras del mundo comunican volumen, no adornan paneles.
 - Ordenar terreno, infraestructura y objetos altos por profundidad de sus huellas; resolver edificios grandes sin depender solo de su altura. Atenuar un objeto que impida ver la parcela seleccionada.

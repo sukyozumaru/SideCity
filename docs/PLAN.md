@@ -10,7 +10,9 @@ Prioridad de plataforma: navegador móvil con Safari en iPhone, además de escri
 
 ## Punto de partida y alcance
 
-La base comprobable es el HTML lateral archivado. El chat anterior anunció terreno isométrico 48 × 48 con río y bosques, pero aún falta recuperar su fuente. Las etapas siguientes son objetivos; no se marcan terminadas por aquel anuncio.
+La aplicación activa es la reconstrucción isométrica en `index.html` y `src/`, autorizada el 3 de noviembre de 2026. El HTML lateral queda archivado. No dependemos del ZIP del chat anterior. Ver `PROGRESS.md` para las verificaciones completadas y las pruebas de dispositivo pendientes.
+
+El usuario amplió la dirección: combinar diseño urbano de SimCity, órdenes a habitantes de Age of Empires y vida cotidiana de Los Sims, con identidad propia y complejidad gradual. La siguiente etapa incorpora colonos seleccionables y asignación directa de tareas. Las rutinas autónomas y necesidades personales sencillas se construyen sobre ese mismo sistema de órdenes.
 
 La primera versión completa debe permitir jugar 15–20 minutos: construir y guardar un barrio funcional, entender una falta de servicio y resolverla, mejorar un edificio y alcanzar el siguiente hito. Es un objetivo de diseño que debe validarse jugando, no una duración medida.
 

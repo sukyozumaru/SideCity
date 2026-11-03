@@ -1,25 +1,35 @@
 # SideCity
 
-Simulador de ciudades para navegador y móvil: construir un barrio, conectarlo, cubrir sus necesidades y verlo crecer en un mundo isométrico 2.5D.
+Una civilización a escala de barrio: diseña la ciudad y dirige a las personas que la construyen. Las referencias expresadas por el usuario son SimCity, Age of Empires y Los Sims, con controles sencillos y una identidad propia.
 
-## Estado real
+## Versión 0.1 · Terreno y cámara
 
-Esta base conserva el prototipo lateral recuperado del chat anterior. La entrega isométrica 48 × 48 fue anunciada en ese chat, pero su ZIP y su código todavía no están disponibles aquí. No se presenta el prototipo archivado como esa entrega.
+Reconstrucción limpia autorizada el 3 de noviembre de 2026. La nueva aplicación sustituye el prototipo lateral como fuente de desarrollo. El ZIP anterior ya no es una dependencia.
 
-- `legacy/SideCity-previous.html`: copia intacta del prototipo recuperado.
-- `docs/PLAN.md`: dirección del juego, etapas y criterios para cerrar cada etapa.
-- `docs/AUDIT.md`: hallazgos del código disponible y límites de la revisión.
-- `docs/ART_DIRECTION.md`: especificación gráfica y de interacción propuesta.
-- `scripts/audit-legacy.mjs`: comprobación reproducible de dos problemas económicos del prototipo.
+- Terreno isométrico 48 × 48, río conectado, riberas, seis variantes de árboles y pradera inicial vacía.
+- Arrastre con ratón o un dedo, pellizco con dos dedos, rueda, controles de zoom y teclado.
+- Inspección de parcelas, cuadrícula opcional, minimapa navegable y vista completa.
+- Cámara y cuadrícula recordadas localmente. No hay edificios ni economía activos todavía.
+- Arte original dibujado por código, sin dependencias ni descargas de imágenes o fuentes.
 
-## Continuar
+## Ejecutar y comprobar
 
-Primero incorporar el último `SideCity-Codex.zip`, comprobar su contenido y comparar sus sistemas con el prototipo archivado. Si no se recupera, reconstruir explícitamente la etapa isométrica sobre esta base, conservando el original.
-
-El prototipo archivado es un único HTML autocontenido. Puede abrirse en un navegador de escritorio; no equivale a una versión publicada para Safari en iPhone. Para comprobar los hallazgos de lógica con Node instalado:
+Con Node instalado, sin instalar paquetes:
 
 ```sh
-node scripts/audit-legacy.mjs
+npm start
+npm test
 ```
 
-No hay versión de producción, despliegue público ni backend de cuentas configurados. El proyecto se desarrolla en un repositorio privado. No se incorpora una licencia de código abierto.
+Abrir `http://127.0.0.1:4173`. El servidor escucha solo en el equipo local. Para comprobar en un iPhone físico hará falta una URL accesible desde ese dispositivo; esta entrega no se publica automáticamente.
+
+## Estructura
+
+- `src/core.js`: terreno determinista, proyección, cámara y máquina de gestos; sin DOM.
+- `src/renderer.js`: caché del terreno, sprites originales, profundidad y minimapa.
+- `src/main.js`: interacción, selección, preferencias y conexión con la interfaz.
+- `tests/`: pruebas de reglas y regresiones.
+- `docs/`: plan, dirección artística, evolución y resultados de verificación.
+- `legacy/`: archivo histórico; no forma parte de la nueva aplicación.
+
+Revisión visual a 1440, 768 y 390 píxeles de ancho. Gestos comprobados con entrada táctil emulada en Chrome. Safari en un iPhone real sigue pendiente. No hay cuentas, backend, monetización ni despliegue público configurados.
