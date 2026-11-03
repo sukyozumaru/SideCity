@@ -1,14 +1,15 @@
 import { TASKS } from './simulation.js';
 export function drawColonist(c, person, point, options) {
-  const { selected, zoom, time, reducedMotion } = options;
+  const { selected, zoom, time, reducedMotion, socialTarget } = options;
   const moving = person.job?.path.length > 0, kind = person.job?.kind;
   const working = kind && !moving && person.state === TASKS[kind]?.action;
   const seated = working && kind === 'rest', sleeping = working && kind === 'sleep';
-  const phase = reducedMotion ? 0 : time / (moving ? 95 : 240) + person.id.length;
+  const phase = reducedMotion ? 0 : time / (moving ? 115 : 260) + [...person.id].reduce((n,c)=>n+c.charCodeAt(0),0)*.17;
   const face = person.direction.x - person.direction.y >= 0 ? 1 : -1;
   const ellipse = (x, y, rx, ry, color) => { c.fillStyle = color; c.beginPath(); c.ellipse(x,y,rx,ry,0,0,Math.PI*2); c.fill(); };
   const stroke = (points, color, width) => { c.strokeStyle=color; c.lineWidth=width; c.beginPath();points.forEach((p,i)=>i?c.lineTo(...p):c.moveTo(...p));c.stroke(); };
   c.save(); c.translate(point.x,point.y); c.lineCap='round';
+  if(person.stage==='child')c.scale(.7,.7);
   ellipse(3,1,13,5,'#294f3738');
   if(selected){c.strokeStyle='#f9fbe7';c.lineWidth=2/zoom;c.beginPath();c.ellipse(0,0,18,8,0,0,Math.PI*2);c.stroke();}
   c.save(); c.scale(face,1);
@@ -33,21 +34,30 @@ export function drawColonist(c, person, point, options) {
     ellipse(0,-40,7.5,9,'#d7ae82');ellipse(-1,-45,8,5.5,person.hair);
     if(person.id!=='ivo')ellipse(-7,-39,3.5,8,person.hair);
     c.fillStyle='#413a2e';c.fillRect(3,-41,1.2,1.5);stroke([[-7,-16],[8,-16]],'#7b6545',2);
-    if(working&&['logging','mining','building','shelter','craftAxe','craftPick'].includes(kind)){
+    if(working&&['logging','mining','building','shelter','bridge','craftAxe','craftPick'].includes(kind)){
       c.save();c.translate(14,-26);c.rotate(-.4+Math.sin(phase*3)*.5);stroke([[0,8],[0,-12]],'#776047',3);c.fillStyle=kind==='logging'?'#8f9787':'#b69667';c.fillRect(-2,-14,11,7);c.restore();
     }
     if(working&&kind==='foraging'){ellipse(15,-29,3,2.5,'#b96956');}
     if(working&&kind==='study'){ellipse(12,-26,5,3.5,'#9da18a');stroke([[8,-25],[14,-30]],'#c0bd9b',1);}
     if(working&&kind==='drink'){ellipse(12,-38,4,2,'#7baeb0');}
     if(working&&kind==='eat'){ellipse(13,-29,5,3,'#b69c6e');ellipse(12,-32,2,2,'#be7861');}
+    if(working&&kind==='scavenge'){stroke([[10,-25],[19,-29]],'#af9565',2);ellipse(17,-23,3,2,'#a5a58e');}
     if(working&&kind==='cooking'){stroke([[10,-27],[19,-19]],'#796244',2);ellipse(18,-18,6,3,'#8e7957');}
   }
   c.restore();
+  if(working&&['logging','mining','shelter','bridge'].includes(kind)&&!reducedMotion){
+    for(let i=0;i<3;i++){const t=(time/650+i*.29)%1;c.globalAlpha=1-t;ellipse(15+t*(i%2?13:-9),-17-t*18,1.7,1.1,kind==='mining'?'#c0c1a8':'#d0b582');}c.globalAlpha=1;
+  }
+  if(working&&kind==='drink'&&!reducedMotion){c.strokeStyle='#c2e0d1';c.lineWidth=1;c.beginPath();c.ellipse(10,2,6+(time/80%5),2,0,0,Math.PI*2);c.stroke();}
+  if((working&&kind==='social')||socialTarget){
+    c.fillStyle='#e3e8cf';c.beginPath();c.roundRect(13,-61,23,14,4);c.fill();c.beginPath();c.moveTo(16,-48);c.lineTo(14,-43);c.lineTo(22,-48);c.fill();for(let i=0;i<3;i++)ellipse(19+i*5,-54,1.2,1.2,'#526a4c');
+  }
+  if(person.stage==='child')c.scale(1/.7,1/.7);
   if(selected||zoom>.65){
-    const top=sleeping||seated?-36:-64;c.font=`600 ${11/zoom}px system-ui`;c.textAlign='center';c.textBaseline='bottom';const width=c.measureText(person.name).width;
+    const top=(sleeping||seated?-36:person.stage==='child'?-48:-64)-(options.labelLift||0);c.font=`600 ${11/zoom}px system-ui`;c.textAlign='center';c.textBaseline='bottom';const width=c.measureText(person.name).width;
     c.fillStyle='#253e32';c.fillRect(-width/2-5/zoom,top-16/zoom,width+10/zoom,19/zoom);c.fillStyle='#edf1e4';c.fillText(person.name,0,top+1);
   }
   if(sleeping){c.fillStyle='#dbe4be';c.font=`${12/zoom}px system-ui`;c.fillText('z',24,-16-(reducedMotion?0:Math.sin(phase)*3));}
-  if(selected&&working&&!['rest','sleep','drink'].includes(kind)){c.fillStyle='#a4bf7e';c.fillRect(-15,-55,30*Math.min(options.progress,1),3);}
+  if(selected&&working&&!['rest','sleep','drink','social'].includes(kind)){c.fillStyle='#a4bf7e';c.fillRect(-15,-55,30*Math.min(options.progress,1),3);}
   c.restore();
 }

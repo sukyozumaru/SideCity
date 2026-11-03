@@ -4,7 +4,7 @@ Una civilización a escala de barrio: diseña la ciudad y dirige a las personas 
 
 La evolución humana por eras y el sandbox se suman como dirección de desarrollo. La definición unificada y el alcance de cada prototipo están en [docs/SIDECITY.md](docs/SIDECITY.md).
 
-## Versión 0.4 · Almacén y primeras herramientas
+## Versión 0.5 · Construcción libre y comunidad
 
 Reconstrucción limpia autorizada el 3 de noviembre de 2026. La nueva aplicación sustituye el prototipo lateral como fuente de desarrollo. El ZIP anterior ya no es una dependencia.
 
@@ -22,11 +22,15 @@ Reconstrucción limpia autorizada el 3 de noviembre de 2026. La nueva aplicació
 - Mini barra de era con etapa, logros reales, porcentaje, tiempo y año del mundo.
 - Arte original dibujado por código, sin dependencias ni descargas de imágenes o fuentes.
 
+## Construcción y nuevas generaciones
+
+Elige dónde poner los refugios con vista previa y crea puentes que abren rutas entre orillas. La comunidad cultiva vínculos, forma hogares y puede preparar una nueva generación con espacio y alimento. Cuatro menús principales y una ficha visible a la vez. Reglas y límites en [docs/SETTLEMENT.md](docs/SETTLEMENT.md).
+
 ## Almacén y producción
 
 Materiales, alimentos, herramientas y saber tienen existencias y usos separados. Fabrica un hacha o un pico de piedra, asigna minería y usa las comidas para recuperar energía. Mundo y semilla permite descargar y abrir partidas para trasladarlas de navegador. Reglas y límites en [docs/INVENTORY.md](docs/INVENTORY.md).
 
-Acceso alojado privado: [Jugar SideCity](https://sidecity-valle.colominegabito.chatgpt.site). Se requiere la cuenta propietaria de Sites.
+El alojamiento actual es privado. Se está preparando una dirección neutral sin el identificador de cuenta.
 
 ## Ejecutar y comprobar
 
@@ -53,6 +57,6 @@ Abrir `http://127.0.0.1:4173`. El servidor escucha solo en el equipo local. Para
 - `docs/`: plan, dirección artística, evolución y resultados de verificación.
 - `legacy/`: archivo histórico; no forma parte de la nueva aplicación.
 
-42 pruebas automatizadas de terreno, cámara, tareas, refugio, necesidades, semillas, expansión y guardado. Revisión visual a 1440, 768 y 390 píxeles de ancho; comprobaciones adicionales en horizontal. Safari en un iPhone real sigue pendiente. Las partidas se guardan en el navegador; no hay sincronización en la nube ni monetización.
+51 pruebas automatizadas de terreno, cámara, tareas, refugio, necesidades, semillas, expansión y guardado. Revisión visual a 1440, 768 y 390 píxeles de ancho; comprobaciones adicionales en horizontal. Safari en un iPhone real sigue pendiente. Las partidas se guardan en el navegador; no hay sincronización en la nube ni monetización.
 
-Reglas y límites: [trabajos](docs/PROFESSIONS.md), [refugio y cuidado](docs/REFUGE.md), [mundo y eras](docs/WORLD.md). Fundición, puentes, hambre, crecimiento de población y eras posteriores siguen en el plan.
+Reglas y límites: [trabajos](docs/PROFESSIONS.md), [refugio y cuidado](docs/REFUGE.md), [mundo y eras](docs/WORLD.md). Fundición, hambre y eras posteriores siguen en el plan. Construcción libre, puentes, relaciones y nuevas generaciones ya están implementados: ver docs/SETTLEMENT.md.

@@ -1,6 +1,7 @@
 import { TILE_W, TILE_H, project, hash } from './core.js';
 import { drawColonist } from './people-renderer.js';
 import { drawShelter } from './camp-renderer.js';
+import { drawBridge, drawPlacement } from './construction-renderer.js';
 import { SECTOR_SIZE, MINERALS } from './terrain.js';
 
 const grass = ['#91b56e', '#94b872', '#96b974', '#92b570', '#98ba75', '#90b36d'];
@@ -116,6 +117,7 @@ export class Renderer {
       for(let y=0;y<=this.world.height;y++){const a=project(0,y),b=project(this.world.width,y);c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);}
       c.strokeStyle = '#365a3430'; c.lineWidth = .75 / z; c.stroke();
     }
+    if(this.simulation)for(const b of this.simulation.buildings)if(b.kind==='bridge')drawBridge(c,b);
     if(this.simulation)for(let y=0;y<this.world.height/SECTOR_SIZE;y++)for(let x=0;x<this.world.width/SECTOR_SIZE;x++){
       if(this.simulation.unlocked.has(`${x},${y}`))continue;
       const a=x*SECTOR_SIZE,b=y*SECTOR_SIZE;
@@ -137,8 +139,7 @@ export class Renderer {
       }
       for(const mineral of this.world.minerals)if(this.simulation.isUnlocked(mineral.x,mineral.y)&&this.simulation.mineralRemaining(mineral)>0)objects.push({kind:'mineral',item:mineral,x:mineral.x+.5,y:mineral.y+.5});
       for(const detail of this.world.scatter)if(this.simulation.isUnlocked(detail.x,detail.y)&&!this.simulation.scavenged.has(`${detail.x},${detail.y}`))objects.push({kind:'scatter',item:detail,x:detail.x+.5,y:detail.y+.5});
-      const shelter = this.simulation.shelter;
-      objects.push({kind:'shelter',x:shelter.x+shelter.width/2,y:shelter.y+shelter.height-.2});
+      for(const shelter of this.simulation.buildings)if(shelter.kind==='shelter'&&shelter.reserved)objects.push({kind:'shelter',item:shelter,x:shelter.x+shelter.width/2,y:shelter.y+shelter.height-.2});
       for (const bush of this.simulation.shrubs) objects.push({ kind: 'bush', item: bush, x: bush.x + .5, y: bush.y + .5 });
       objects.push({ kind: 'fire', x: 21.5, y: 16.5 });
     }
@@ -149,10 +150,10 @@ export class Renderer {
       if (p.x < bounds.left || p.x > bounds.right || p.y < bounds.top || p.y > bounds.bottom) continue;
       if(object.kind==='mineral'){this.drawMineral(object.item,p);continue;}
       if(object.kind==='scatter'){this.drawScatter(object.item,p);continue;}
-      if (object.kind === 'shelter') { drawShelter(c, this.simulation.shelter); continue; }
+      if (object.kind === 'shelter') { drawShelter(c, object.item); continue; }
       if (object.kind === 'person') { this.drawPerson(object.item, p, time); continue; }
       if (object.kind === 'bush') { this.drawBush(object.item, p); continue; }
-      if (object.kind === 'fire') { this.drawFire(p, time); continue; }
+      if (object.kind === 'fire') { this.drawFire(p, this.simulation.time*1000); continue; }
       const tree = object.item;
       if (this.simulation && !this.simulation.standing(Math.floor(tree.x), Math.floor(tree.y))) {
         ellipse(c, p.x, p.y, 8, 4, '#8d7754'); ellipse(c, p.x, p.y - 3, 7, 3, '#c0a778'); continue;
@@ -163,6 +164,7 @@ export class Renderer {
       c.save();c.translate(p.x,p.y);if(chopping&&!this.reducedMotion)c.rotate(Math.sin(this.simulation.time*9)*.018);c.drawImage(this.sprites[tree.variant],-72,-160);c.restore();
     }
     c.globalAlpha = 1;
+    drawPlacement(c,this.placement,z);
     if (this.selected) {
       const p = project(this.selected.x + .5, this.selected.y + .5);
       ellipse(c, p.x, p.y, 3.4 / z, 2 / z, '#315d49');
@@ -172,7 +174,7 @@ export class Renderer {
       c.lineWidth = 1 / z; c.strokeStyle = '#e7f3d64d';
       for (let i = 4; i < 48; i += 7) {
         const y = 24 + Math.sin(i * .14 + .4) * 5 + Math.sin(i * .31) * 1.1;
-        const p = project(i + (time / 18000 % 1), y);
+        const p = project(i + ((this.simulation?.time*1000||0) / 18000 % 1), y);
         c.beginPath(); c.moveTo(p.x - 6, p.y); c.lineTo(p.x + 9, p.y); c.stroke();
       }
     }
@@ -183,7 +185,11 @@ export class Renderer {
     this.drawMinimap();
   }
   drawPerson(person, p, time) {
-    drawColonist(this.ctx, person, p, { selected: this.selectedPeople?.includes(person.id), zoom: this.camera.zoom, time: this.simulation.time * 1000, reducedMotion: this.reducedMotion, progress: person.job?.kind === 'shelter' ? this.simulation.shelter.progress : person.job?.progress || 0 });
+    const socialTarget=this.simulation.people.some(other=>other.job?.kind==='social'&&other.job.source?.personId===person.id&&!other.job.path.length),point={...p};
+    if(this.simulation.hasBridge(Math.floor(person.x),Math.floor(person.y)))point.y-=9;
+    const overlaps=this.simulation.people.filter(other=>Math.hypot(other.x-person.x,other.y-person.y)<.35).sort((a,b)=>a.id.localeCompare(b.id));if(overlaps.length>1)point.x+=(overlaps.indexOf(person)-(overlaps.length-1)/2)*8;
+    const neighbours=this.simulation.people.filter(other=>Math.hypot(other.x-person.x,other.y-person.y)<1.25).sort((a,b)=>a.id.localeCompare(b.id));
+    drawColonist(this.ctx, person, point, { selected: this.selectedPeople?.includes(person.id), zoom: this.camera.zoom, time: this.simulation.time * 1000, reducedMotion: this.reducedMotion, socialTarget,labelLift:neighbours.length>1?neighbours.indexOf(person)*16/this.camera.zoom:0, progress: ['shelter','bridge'].includes(person.job?.kind) ? this.simulation.jobProject(person.job).progress : person.job?.progress || 0 });
     if (this.selectedPeople?.includes(person.id) && person.job?.path.length) {
       const c = this.ctx; c.save(); c.lineWidth = 1.5 / this.camera.zoom; c.strokeStyle = '#f7f8dfaa'; c.setLineDash([4 / this.camera.zoom, 5 / this.camera.zoom]); c.beginPath(); c.moveTo(p.x, p.y);
       for (const step of person.job.path) { const s = project(step.x, step.y); c.lineTo(s.x, s.y); }

@@ -14,7 +14,7 @@ export class PeopleUI {
       button.onclick = () => { this.choose([p.id]); const point = project(p.x, p.y); camera.x = point.x + (camera.width > 700 ? 80 / camera.zoom : 0); camera.y = point.y + (camera.width < 700 ? 180 / camera.zoom : -35 / camera.zoom); camera.bound(); onChange(); };
       $('roster').append(button);
     }
-    const all = document.createElement('button'); all.className = 'group-button'; all.textContent = 'Todos'; all.onclick = () => this.choose(this.sim.people.map(p => p.id)); $('roster').append(all);
+    const all = document.createElement('button'); all.className = 'group-button'; all.textContent = 'Adultos'; all.onclick = () => this.choose(this.sim.people.filter(p=>p.stage==='adult').map(p => p.id)); $('roster').append(all);
     $('close-person').onclick = () => this.choose([]);
     $('stop-work').onclick = () => { this.selected.forEach(id => this.sim.stop(id)); this.onChange(); this.refresh(); };
     const none = document.createElement('option'); none.value = ''; none.textContent = 'Según lo que aprende'; $('specialty').append(none);
@@ -32,7 +32,7 @@ export class PeopleUI {
     }
     $('specialty').onchange = () => { if (this.selected.length === 1) this.sim.setSpecialty(this.selected[0], $('specialty').value); this.refresh(); this.onChange(); };
     for (const category of ['work', 'build', 'craft', 'care']) $('category-' + category).onclick = () => this.showCategory(category);
-    $('cancel-shelter').onclick = () => { if (this.sim.cancelShelter()) this.notify('Materiales recuperados. Puedes empezar la obra de nuevo.'); this.refresh(); this.onChange(); };
+    $('cancel-shelter').onclick = () => { if (this.sim.cancelBuilding((this.sim.activeProject('shelter')||this.sim.shelter).id)) this.notify('Materiales recuperados. Puedes empezar la obra de nuevo.'); this.refresh(); this.onChange(); };
     $('camp-status').onclick = () => { this.choose(this.sim.people.map(p => p.id)); this.showTab('tasks'); this.showCategory('build'); const p = project(20, 15); this.camera.x = p.x + 100 / camera.zoom; this.camera.y = p.y + (camera.width < 700 ? 170 / camera.zoom : 0); this.onChange(); };
     for (const tab of ['tasks', 'skills', 'history']) $('tab-' + tab).onclick = () => this.showTab(tab);
     const tabs = ['tasks', 'skills', 'history'];
@@ -55,12 +55,12 @@ export class PeopleUI {
     this.tab = tab; this.refresh();
   }
   choose(ids) {
-    if(ids.length)document.dispatchEvent(new CustomEvent('sidecity:person-open'));
+    if(ids.length){document.dispatchEvent(new CustomEvent('sidecity:person-open'));document.dispatchEvent(new CustomEvent('sidecity:panel-open',{detail:'person'}));}
     this.selected = ids; this.renderer.selectedPeople = ids; this.renderer.selected = null; $('parcel').hidden = true;
     $('person-panel').hidden = !ids.length; $('viewport').classList.toggle('has-person', ids.length > 0);
     $('workspace').classList.toggle('has-person', ids.length > 0);
     $('explore').setAttribute('aria-pressed', String(!ids.length)); $('explore').classList.toggle('active', !ids.length);
-    $('roster').querySelector('.group-button').setAttribute('aria-pressed', String(ids.length === 3));
+    $('roster').querySelector('.group-button').setAttribute('aria-pressed', String(ids.length === this.sim.people.filter(p=>p.stage==='adult').length));
     if (ids.length > 1) this.showTab('tasks');
     $('tab-skills').disabled = ids.length !== 1; $('tab-history').disabled = ids.length !== 1;
     this.refresh(); this.onChange();
@@ -70,7 +70,8 @@ export class PeopleUI {
     clearTimeout(this.noticeTimer); this.noticeTimer = setTimeout(() => { $('notification').hidden = true; }, 5500);
   }
   order(kind, destination) {
-    const results = this.selected.map(id => ({ id, result: this.sim.assign(id, kind, destination) }));
+    const used=new Set();
+    const results = this.selected.map(id => {let target=destination;if(kind==='move'&&this.selected.length>1){const choices=[];for(let r=0;r<=2;r++)for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++)if(Math.max(Math.abs(x),Math.abs(y))===r)choices.push({x:destination.x+x,y:destination.y+y});target=choices.find(t=>!used.has(`${t.x},${t.y}`)&&this.sim.route(this.sim.person(id),t))||destination;used.add(`${target.x},${target.y}`);}return {id,result:this.sim.assign(id,kind,target)};});
     const failures = results.filter(r => !r.result.ok);
     const text = failures.length ? failures.map(r => `${this.sim.person(r.id).name}: ${r.result.reason}`).join(' ') : `${kind === 'move' ? 'Desplazamiento' : TASKS[kind].action}: orden asignada.`;
     $('person-note').textContent = text; this.notify(text); this.refresh(); this.onChange();
@@ -88,8 +89,8 @@ export class PeopleUI {
     if (!this.selected.length) return false;
     const point = this.camera.screenToWorld(x, y), cell = unproject(point.x, point.y), tile = this.sim.world.get(Math.floor(cell.x), Math.floor(cell.y));
     if (!tile) return false;
-    const s = this.sim.shelter, roof = project(s.x + 1, s.y + 1);
-    if (s.reserved && (point.x > roof.x - 90 && point.x < roof.x + 90 && point.y > roof.y - 135 && point.y < roof.y + 45 || insideShelter(s, tile.x, tile.y))) { this.order(s.complete ? 'sleep' : 'shelter'); return true; }
+    if(this.sim.hasBridge(tile.x,tile.y)){this.order('move',tile);return true;}
+    for(const s of this.sim.buildings.filter(b=>b.reserved).sort((a,b)=>b.x+b.y-a.x-a.y)){const roof=project(s.x+s.width/2,s.y+s.height/2);if(insideShelter(s,tile.x,tile.y)||s.kind==='shelter'&&point.x>roof.x-75&&point.x<roof.x+75&&point.y>roof.y-112&&point.y<roof.y+25){if(s.kind==='shelter'||!s.complete){this.order(s.complete?'sleep':s.kind,{buildingId:s.id});return true;}}}
     for (const tree of [...this.sim.world.trees].reverse()) { const p = project(tree.x, tree.y); if (this.sim.standing(Math.floor(tree.x), Math.floor(tree.y)) && Math.abs(point.x-p.x)<37 && point.y>p.y-122 && point.y<p.y+6) { this.order('logging',{x:Math.floor(tree.x),y:Math.floor(tree.y)}); return true; } }
     for (const bush of this.sim.shrubs) { const p = project(bush.x+.5,bush.y+.5); if(Math.abs(point.x-p.x)<23 && point.y>p.y-28 && point.y<p.y+8){this.order('foraging',bush);return true;} }
     if (this.sim.standing(tile.x, tile.y)) { this.order('logging', tile); return true; }
@@ -97,32 +98,36 @@ export class PeopleUI {
     if(this.sim.world.scatter.some(s=>s.x===tile.x&&s.y===tile.y)&&!this.sim.scavenged.has(`${tile.x},${tile.y}`)){this.order('scavenge',tile);return true;}
     if (this.sim.shrubs.some(b => b.x === tile.x && b.y === tile.y)) { this.order('foraging', tile); return true; }
     if (tile.x===21&&tile.y===16&&this.sim.firepit){this.order('cooking');return true;}
-    if (tile.type === 'water') { this.order('drink', tile); return true; }
+    if (tile.type === 'water'&&!this.sim.hasBridge(tile.x,tile.y)) { this.order('drink', tile); return true; }
     this.order('move', tile); return true;
   }
   refresh() {
+    for(const p of this.sim.people)if(!$('roster').querySelector(`[data-person="${p.id}"]`)){
+      const b=document.createElement('button');b.className='person-chip';b.dataset.person=p.id;b.setAttribute('aria-pressed','false');
+      const portrait=document.createElement('span');portrait.className='portrait';portrait.style.setProperty('--coat',p.color);portrait.style.setProperty('--hair',p.hair);const text=document.createElement('span'),name=document.createElement('strong'),state=document.createElement('small');name.textContent=p.name;text.append(name,state);b.append(portrait,text);b.onclick=()=>{this.choose([p.id]);const point=project(p.x,p.y);this.camera.x=point.x;this.camera.y=point.y;this.onChange();};$('roster').insertBefore(b,$('roster').querySelector('.group-button'));
+    }
     for (const p of this.sim.people) {
       const button = $('roster').querySelector(`[data-person="${p.id}"]`); button.setAttribute('aria-pressed', String(this.selected.includes(p.id)));
-      button.querySelector('small').textContent = p.state === 'Caminando' ? 'En camino' : p.job ? TASKS[p.job.kind]?.action || 'Libre' : 'Libre';
+      button.querySelector('small').textContent = p.stage==='child'?'Infancia':p.state === 'Caminando' ? 'En camino' : p.job ? TASKS[p.job.kind]?.action || 'Libre' : 'Libre';
     }
     for (const resource of Object.keys(this.sim.resources)) if($(resource)) $(resource).textContent = this.sim.resources[resource];
-    const shelter = this.sim.shelter, builders = this.sim.people.filter(p => p.job?.kind === 'shelter').length;
-    $('camp-status-label').textContent = shelter.reserved && !shelter.complete ? `Refugio ${Math.floor(shelter.progress * 100)}%` : 'Refugio';
-    $('camp-status').title = shelter.complete ? 'Refugio terminado · 3 plazas' : shelter.reserved ? 'Ver la obra compartida' : 'Construir el primer refugio · 20 madera';
+    const shelter = this.sim.activeProject('shelter')||this.sim.shelter, builders = this.sim.people.filter(p => p.job?.kind === 'shelter'&&this.sim.jobProject(p.job)===shelter).length;
+    $('camp-status-label').textContent='Construir';$('camp-status').title='Colocar refugios y puentes';
     $('construction-state').textContent = shelter.complete ? 'Terminado. Los tres pueden dormir aquí.' : shelter.reserved ? `${Math.floor(shelter.progress * 100)}% · ${builders} constructores · materiales reservados` : 'El primer refugio para los tres. Coste único: 20 madera.';
     $('construction-progress').value = shelter.progress;
     $('cancel-shelter').hidden = !shelter.reserved || shelter.complete;
     if (!this.selected.length) return;
     const p = this.sim.person(this.selected[0]), group = this.selected.length > 1;
-    $('person-name').textContent = group ? 'Los tres fundadores' : p.name;
-    $('person-profession').textContent = group ? 'Orden para todo el grupo' : profession(p) + (p.specialty ? ` · Nivel ${skillLevel(p.skills[p.specialty].xp)}` : '');
-    $('person-state').textContent = group ? `${this.selected.filter(id => this.sim.person(id).job).length} de 3 con tarea` : p.state;
+    $('person-name').textContent = group ? `${this.selected.length} habitantes` : p.name;
+    $('person-profession').textContent = group ? 'Orden para todo el grupo' : p.stage==='child'?'Infancia · los oficios se abren al crecer':profession(p) + (p.specialty ? ` · Nivel ${skillLevel(p.skills[p.specialty].xp)}` : '');
+    $('person-state').textContent = group ? `${this.selected.filter(id => this.sim.person(id).job).length} de ${this.selected.length} con tarea` : p.state;
     $('stop-work').disabled = !this.selected.some(id => this.sim.person(id).job);
-    $('work-progress').value = !group && p.job ? p.job.kind === 'shelter' ? shelter.progress : Math.min(p.job.progress, 1) : 0;
+    $('work-progress').value = !group && p.job ? ['shelter','bridge'].includes(p.job.kind) ? this.sim.jobProject(p.job).progress : Math.min(p.job.progress, 1) : 0;
     for (const need of ['water', 'energy']) { const value = group ? Math.min(...this.selected.map(id => this.sim.person(id).needs[need])) : p.needs[need]; $('need-' + need).value = value; $('need-' + need + '-value').textContent = `${Math.round(value)}%`; }
     for (const [id, task] of Object.entries(TASKS)) {
-      const button = $('task-list').querySelector(`[data-task="${id}"]`), reason = this.sim.blockReason(id);
+      const button = $('task-list').querySelector(`[data-task="${id}"]`), reason = !group&&p.stage==='child'&&!['rest','sleep','eat','drink','social'].includes(id)?'Los oficios se abren al crecer.':this.sim.blockReason(id);
       button.disabled = !!reason; button.title = reason || task.detail; button.classList.toggle('assigned', !group && p.job?.kind === id);
+      if(['shelter','bridge'].includes(id))button.hidden=this.category!==task.category||!this.sim.activeProject(id)?.reserved;
       button.querySelector('small').textContent = reason || task.detail;
       button.querySelector('.task-level').textContent = group || !task.skill ? '' : `Nv. ${skillLevel(p.skills[task.skill].xp)}`;
     }

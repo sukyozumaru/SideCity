@@ -9,6 +9,7 @@ export class InventoryUI {
     for(const button of document.querySelectorAll('[data-stock-group]'))button.onclick=()=>this.open(button.dataset.stockGroup);
     $('close-stock').onclick=()=>this.close();
     document.addEventListener('sidecity:person-open',()=>this.close());
+    document.addEventListener('sidecity:panel-open',e=>{if(e.detail!=='stock')this.close();});
     for(const [id,name]of [['all','Todo'],...Object.entries(ITEM_GROUPS)]){
       const b=document.createElement('button');b.textContent=name;b.dataset.filter=id;b.setAttribute('aria-pressed',String(id==='all'));b.onclick=()=>{this.filter=id;this.last='';this.refresh();};$('stock-filters').append(b);
     }
@@ -44,6 +45,7 @@ export class InventoryUI {
     this.refresh();
   }
   open(filter='all'){
+    document.dispatchEvent(new CustomEvent('sidecity:panel-open',{detail:'stock'}));
     const worker=this.people.selected[0];if(worker)$('craft-worker').value=worker;
     this.people.choose([]);this.filter=filter;this.selected=null;this.showMode('stock');
     $('stock-panel').hidden=false;$('stock-open').setAttribute('aria-expanded','true');$('workspace').classList.add('has-stock');this.last='';this.refresh();$('close-stock').focus();this.onChange();
@@ -52,6 +54,7 @@ export class InventoryUI {
   showMode(mode){this.mode=mode;for(const id of ['stock','craft']){$('stock-tab-'+id).setAttribute('aria-selected',String(id===mode));$('stock-tab-'+id).tabIndex=id===mode?0:-1;$('stock-view-'+id).hidden=id!==mode;}this.refresh();}
   refresh(){
     if($('stock-panel').hidden)return;
+    const adults=this.sim.people.filter(p=>p.stage==='adult'),workers=adults.map(p=>p.id).join();if(this.workers!==workers){const current=$('craft-worker').value;$('craft-worker').replaceChildren();for(const p of adults){const o=document.createElement('option');o.value=p.id;o.textContent=p.name;$('craft-worker').append(o);}if(adults.some(p=>p.id===current))$('craft-worker').value=current;this.workers=workers;}
     const worker=this.sim.person($('craft-worker').value),stamp=JSON.stringify([this.sim.resources,this.filter,this.selected,worker?.job?.kind]);
     // Stock changes rebuild text only when counts change; work bars remain live.
     if(stamp!==this.last){

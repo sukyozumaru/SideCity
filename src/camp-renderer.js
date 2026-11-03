@@ -7,6 +7,7 @@ export function drawShelter(ctx, shelter, selected = false) {
   const { x, y, width: w, height: h, progress } = shelter;
   const a = point(x, y), b = point(x + w, y), c = point(x + w, y + h), d = point(x, y + h);
   ctx.save(); ctx.lineJoin = 'round';
+  polygon([point(x+.12,y+.1),point(x+w+.55,y+.1),point(x+w+.55,y+h+.5),point(x+.12,y+h+.5)],'#354d3633');
   polygon([a, b, c, d], '#a69669', selected ? '#edf0c4' : '#7c8c55');
   for (let i = 0; i < 8; i++) line(point(x, y + i / 4), point(x + w, y + i / 4), '#bca77a', 1);
   const postHeight = 16 + Math.min(progress / .25, 1) * 49;
@@ -36,11 +37,15 @@ export function drawShelter(ctx, shelter, selected = false) {
       line(point(px, y + 1, 107), point(px, y + h + .1, 66), i % 3 ? '#af955e' : '#d0b47b', 1.5);
     }
     line(ridgeA, ridgeB, '#dac18c', 3);
+    line(point(x-.12,y+h+.12,66),point(x+w+.12,y+h+.12,66),'#8e754d',4);
+    for(let i=0;i<9;i++){const px=x+i*.24;line(point(px,y+h+.12,66),point(px+.03,y+h+.16,62),'#ddc48c',1);}
   }
   if (shelter.complete) {
+    polygon([point(x+.45,y+h),point(x+1.2,y+h),point(x+1.2,y+h+.26),point(x+.45,y+h+.26)],'#9c875c','#7b714e');
+    line(point(x+.5,y+h+.12),point(x+1.15,y+h+.12),'#c6ad78',1);
     for (const [mx, my] of [[x + .5, y + h + .5], [x + 1.5, y + h + .5], [x + w + .5, y + 1.5]]) {
       const p = project(mx, my);
-      polygon([{x:p.x-16,y:p.y},{x:p.x,y:p.y-7},{x:p.x+16,y:p.y},{x:p.x,y:p.y+7}], '#bba776', '#a18f61');
+      polygon([{x:p.x-13,y:p.y},{x:p.x,y:p.y-5},{x:p.x+13,y:p.y},{x:p.x,y:p.y+5}], '#a59b6b', '#928c5d');
     }
   } else {
     const p = project(x + 1, y + h + .25); ctx.fillStyle = '#314b36'; ctx.fillRect(p.x - 38, p.y + 6, 76, 5); ctx.fillStyle = '#b3c77e'; ctx.fillRect(p.x - 38, p.y + 6, 76 * progress, 5);

@@ -53,7 +53,7 @@ export class WorldUI {
     $('era-detail-time').textContent=`Año ${state.year}, día ${state.day} · ${state.elapsed} de tiempo simulado. Cada año representa 30 minutos del mundo.`;
     const stamp=state.milestones.map(m=>Number(m.done)).join('');
     if(stamp!==this.stamp){$('era-milestones').replaceChildren();for(const m of state.milestones){const li=document.createElement('li');li.textContent=`${m.done?'✓':'○'} ${m.label}`;$('era-milestones').append(li);}this.stamp=stamp;}
-    $('world-summary').textContent=`${this.sim.world.width} × ${this.sim.world.height} · 6.912 parcelas · ${this.sim.unlocked.size}/48 sectores abiertos. Semilla ${this.sim.world.seed}. Piedritas recogidas: ${this.sim.resources.stone}.`;
+    $('world-summary').textContent=`${this.sim.world.width} × ${this.sim.world.height} · 6.912 parcelas · ${this.sim.unlocked.size}/48 sectores abiertos. Semilla ${this.sim.world.seed}. Piedra almacenada: ${this.sim.resources.stone}.`;
     if(this.sector){const cost=this.sim.expansionCost(),reason=this.sim.expansionReason(this.sector.x,this.sector.y);$('parcel-description').textContent=reason||'Amplía tu comunidad hacia este sector vecino. Los ríos siguen siendo obstáculos naturales.';$('unlock-sector').hidden=false;$('unlock-sector').disabled=!!reason;$('unlock-sector').textContent=`Abrir 144 parcelas · ${cost.wood} madera + ${cost.knowledge} saber`;}
   }
 }

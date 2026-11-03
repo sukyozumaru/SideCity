@@ -10,6 +10,9 @@ El arranque definido por el usuario son tres colonos fundadores desde el primer 
 
 ## Estado actual
 
+Actualización 0.5: construcción libre, puentes transitables, hogares y repoblación mediante nacimientos. Menús coordinados y esquema 5. Reglas actuales en SETTLEMENT.md. La fundición y agricultura son el siguiente bloque; no repetir los puentes ni la población.
+
+
 La etapa de terreno y cámara se reconstruyó con autorización del usuario; no depende del ZIP anterior. La aplicación activa está en `index.html` y `src/`. El prototipo lateral se conserva en `legacy/`, fuera de la nueva aplicación.
 
 Versión 0.4: mundo procedural de 96 × 72, expansión por sectores de 144, tres fundadores, refugio cooperativo, agua y energía, fogón/cocina, siete habilidades y barra de Orígenes. Almacén separado por categorías; hacha/pico fabricables, extracción finita de piedra/carbón/cobre/estaño y comer. Guardado por semilla, migración y archivos portátiles. Mantener el arte aprobado. Ver INVENTORY.md, REFUGE.md y WORLD.md.

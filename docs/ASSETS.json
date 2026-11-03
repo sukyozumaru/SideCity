@@ -145,6 +145,32 @@
       "id": "inventory-items",
       "format": "original inline SVG",
       "source": "src/item-icons.js"
+    },
+    {
+      "id": "free-buildings",
+      "source": "src/camp-renderer.js + src/construction-renderer.js",
+      "variants": [
+        "thatch eaves",
+        "porch threshold",
+        "timber bridge posts",
+        "deck slats",
+        "handrails",
+        "placement ghost"
+      ],
+      "provenance": "original code drawings"
+    },
+    {
+      "id": "community-animation",
+      "source": "src/people-renderer.js",
+      "variants": [
+        "child proportions",
+        "conversation gestures",
+        "speech bubbles",
+        "work chips",
+        "water ripple",
+        "separated labels"
+      ],
+      "clock": "simulation time"
     }
   ]
 }
