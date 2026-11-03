@@ -6,7 +6,7 @@ Dirección: [SIDECITY.md](SIDECITY.md). Estado comprobado: [PROGRESS.md](PROGRES
 
 Una civilización que construyes, diriges y ves vivir a través de las eras. Diseñar el asentamiento, dar órdenes a sus habitantes y permitir rutinas autónomas deben funcionar juntos con controles sencillos en móvil.
 
-El arranque definido por el usuario es un humano inicial. Tras su primera tarea guiada aparece el segundo y empieza la comunidad. Cada era abre edificios, roles, trabajos, inventos, reglas y formas de organizarse. Tamaño urbano y era tecnológica son ejes distintos.
+El arranque definido por el usuario son tres colonos fundadores desde el primer momento: el origen de la humanidad y de la sociedad dentro de SideCity. Cada era abre edificios, roles, trabajos, inventos, reglas y formas de organizarse. Tamaño urbano y era tecnológica son ejes distintos.
 
 ## Estado actual
 
@@ -21,8 +21,8 @@ Habitantes, construcción, necesidades, eras y sandbox están diseñados, pero a
 | Bloque | Entrega | Condición de cierre |
 | --- | --- | --- |
 | Terreno y cámara | Mundo vacío legible y navegable | Casillas correctas a cualquier zoom, todas las esquinas accesibles, arrastre/pellizco/cancelación sin selección accidental; falta validar dispositivo físico |
-| Primer humano | Una persona seleccionable, con nombre y orden visible | Se mueve por rutas válidas y completa una recolección; no atraviesa agua ni árboles |
-| Primera comunidad | Segundo humano tras la primera tarea; órdenes individuales y de grupo | Aparece una sola vez, las órdenes pueden cambiarse y no se duplican recursos |
+| Tres colonos fundadores | Tres personas seleccionables desde el inicio, con nombre y orden visible | Se mueven por rutas válidas y completan una recolección; no atraviesan agua ni árboles |
+| Primera comunidad | Reparto de trabajo; órdenes individuales y de grupo | Las órdenes pueden cambiarse y no se duplican personas ni recursos |
 | Primer refugio | Proyecto de obra, materiales y constructores asignados | Los materiales se reservan una vez; cancelar y reanudar no los duplica ni los pierde indebidamente |
 | Rutinas y aldea | Alimento, descanso, refugio y oficios persistentes | Al acabar una orden vuelven al trabajo o rutina; se entiende por qué dejan de trabajar |
 | Primera era | Pasar del campamento a una comunidad agrícola | El avance exige una capacidad demostrada y una decisión; desbloquea una acción, un trabajo y un cambio visual |
@@ -49,12 +49,12 @@ La altura visual de un objeto nunca determina su huella. Guardar identificadores
 
 ## Primer bloque de habitantes
 
-1. Dibujar y probar un humano en el terreno aprobado, con escala y profundidad coherentes.
-2. Seleccionarlo y mostrar nombre, tarea actual y acción contextual.
-3. Ordenarle caminar; resolver rutas por tierra y rechazar destinos inaccesibles.
-4. Recolectar madera con tiempo de trabajo y resultado verificable.
-5. Hacer aparecer el segundo humano una sola vez tras completar la primera tarea.
-6. Asignar órdenes independientes y probar selección del grupo.
+1. Dibujar tres colonos con identidades distintas en el terreno aprobado, con escala y profundidad coherentes.
+2. Hacerlos aparecer juntos desde el inicio, sin edificios ni sociedad precargados.
+3. Seleccionar a cada uno o al grupo y mostrar nombres, tareas y acciones contextuales.
+4. Ordenarles caminar; resolver rutas por tierra y rechazar destinos inaccesibles.
+5. Recolectar madera con tiempo de trabajo y resultado verificable.
+6. Repartir tareas independientes y probar cooperación y selección del grupo.
 
 Mantener la escena reducida: aún sin hambre compleja, relaciones, comercio ni inventario detallado. Al validar el control directo, producir el primer refugio y sus materiales.
 
@@ -66,7 +66,7 @@ Cada era cambia materiales, siluetas, herramientas y actividad manteniendo el lu
 
 ## Validación
 
-Pruebas de reglas: coordenadas, ocupación, rutas, selección/órdenes, materiales reservados, recompensas únicas, aparición única del segundo habitante y migración de guardados. Probar comportamiento observable en vez de replicar cada función de dibujo.
+Pruebas de reglas: coordenadas, ocupación, rutas, selección/órdenes, materiales reservados, recompensas únicas, aparición inicial de exactamente tres fundadores y migración de guardados. Probar comportamiento observable en vez de replicar cada función de dibujo.
 
 Interacción: toque, arrastre, pellizco, cancelación, varios dedos, rotación del dispositivo y reanudación tras cambiar de aplicación. Revisar 390 × 844, 844 × 390, 768 × 1024 y 1440 × 900. La emulación no sustituye Safari en un iPhone real.
 
@@ -78,4 +78,4 @@ Antes de beta, medir arranque, trabajo fuera de cámara, memoria de cachés, age
 
 Combate, diplomacia, multijugador, relaciones familiares profundas, terraformación y catástrofes se decidirán después. El futuro tecnológico es opcional. No se presupone que una referencia obligue a incorporar todos sus sistemas.
 
-Las eras avanzan por logros y decisión del jugador, no por un reloj inevitable. El sandbox permite ajustar la experiencia por partida. La identidad de SideCity se comprueba en el primer humano, la primera colaboración y la primera transformación visible del asentamiento.
+Las eras avanzan por logros y decisión del jugador, no por un reloj inevitable. El sandbox permite ajustar la experiencia por partida. La identidad de SideCity se comprueba en los tres fundadores, la primera colaboración y la primera transformación visible del asentamiento.

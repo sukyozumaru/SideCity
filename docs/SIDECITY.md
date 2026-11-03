@@ -6,7 +6,7 @@ Documento de dirección, 3 de noviembre de 2026. Reúne las ideas expresadas por
 
 **Una civilización que construyes, diriges y ves vivir a través de las eras.**
 
-Comienzas con un solo humano y un valle sin construir. Le indicas dónde ir y qué hacer. Tras su primera tarea guiada aparece un segundo humano: empieza la comunidad. Organizas el asentamiento y resuelves las necesidades que surgen al crecer. Con el tiempo, el mismo lugar cambia de materiales, oficios, arquitectura, tecnología y normas. Puedes seguir el progreso o activar un mundo sandbox para experimentar.
+Comienzas con tres colonos fundadores y un valle sin construir. Son el origen de la humanidad y de su sociedad dentro del mundo de SideCity. Les indicas dónde ir y qué hacer, repartes las primeras tareas y organizas la comunidad desde cero. Con el tiempo, el mismo lugar cambia de materiales, oficios, arquitectura, tecnología y normas. Puedes seguir el progreso o activar un mundo sandbox para experimentar.
 
 SideCity conserva su nombre. Su identidad será la relación entre tus órdenes, la vida de los habitantes y el cambio visible de un barrio a lo largo del tiempo. La escala se construye desde ese barrio hacia una civilización, conservando lugares y personas que el jugador reconoce.
 
@@ -45,13 +45,13 @@ Explorar → seleccionar habitantes → recolectar materiales → planear una ob
 
 El primer tramo tiene esta secuencia de diseño:
 
-1. Aparece un humano en la pradera. Su nombre y una instrucción breve enseñan a seleccionarlo.
-2. Le indicas una tarea sencilla de recolección. Se mueve, trabaja y deja un resultado visible.
-3. Al terminar esa primera tarea aparece un segundo humano cerca del punto inicial; su llegada se ve en el mapa.
-4. Das tareas distintas, reúnes materiales y marcas el primer refugio.
-5. Asignas trabajo a la obra. Al terminar, los dos habitantes forman el primer campamento estable.
+1. Los tres colonos aparecen juntos en la pradera desde el inicio. Sus nombres y una instrucción breve enseñan a seleccionarlos individualmente o en grupo.
+2. Indicas a uno una tarea sencilla de recolección. Se mueve, trabaja y deja un resultado visible.
+3. Repartes tareas entre los otros dos: explorar, reunir alimento o colaborar en la recolección.
+4. Reúnes materiales y marcas el primer refugio.
+5. Asignas trabajo a la obra. Al terminar, los tres fundadores forman el primer campamento estable.
 
-La aparición inicial es una regla simbólica del juego. El segundo humano llega al lugar; no se requiere reproducción para desbloquear la comunidad. La población posterior podrá crecer por llegadas según capacidad y condiciones. Familias y nacimientos son una decisión de diseño posterior. Esta secuencia todavía no está implementada.
+Los tres fundadores están disponibles desde el primer momento y tienen identidades distintas. La forma de crecimiento de la población posterior se definirá al desarrollar las rutinas y la sociedad; no hace falta resolver reproducción para jugar el primer campamento. Esta secuencia todavía no está implementada.
 
 ## Personas: control directo y autonomía
 
@@ -92,7 +92,7 @@ Una era abre posibilidades en seis áreas conectadas. Los ejemplos son propuesta
 
 | Etapa | Edificios | Roles y trabajos | Inventos | Mentalidad colectiva | Reglas posibles |
 | --- | --- | --- | --- | --- | --- |
-| Primer humano | Refugio elemental | Recolectar, explorar, construir a mano | Herramienta simple | Curiosidad y supervivencia | Prioridad de alimento o refugio |
+| Tres fundadores | Refugio elemental | Recolectar, explorar, construir a mano | Herramienta simple | Curiosidad, supervivencia y cooperación | Reparto inicial de tareas; prioridad de alimento o refugio |
 | Primera comunidad | Campamento, reserva común | Repartir tareas y ayudar en obras | Conservación y trabajo compartido | Cooperación | Compartir materiales; alternar trabajo y descanso |
 | Aldea agrícola | Campos, almacén, viviendas | Agricultor, constructor, cuidador de reservas | Cultivo y herramientas mejores | Planificación del futuro | Reserva mínima de comida; dedicación por oficio |
 | Artesanía y comercio | Taller, mercado, plaza | Artesano, transportista, comerciante | Procesos especializados e intercambio | Especialización e intercambio | Distribución y prioridades de producción |
@@ -125,7 +125,7 @@ El edificio de una nueva era debe seguir perteneciendo al mismo valle. Audio bre
 | Bloque | Qué demuestra | Alcance |
 | --- | --- | --- |
 | Terreno y cámara | El mundo se lee y se recorre bien | Implementado; ver verificación y límites en PROGRESS.md |
-| Primer humano y comunidad | Mandar a una persona resulta claro y aparece cooperación | Un humano inicial, primera tarea, llegada del segundo, selección individual/grupo, mover, rutas y recolectar madera |
+| Tres colonos y comunidad | Mandar a cada persona resulta claro y aparece cooperación | Tres fundadores desde el inicio, selección individual/grupo, reparto de tareas, mover, rutas y recolectar madera |
 | Obras y materiales | Las personas transforman el lugar | Una vivienda, reserva de recursos, progreso de obra y cancelación sin duplicar materiales |
 | Rutinas y aldea | El asentamiento funciona sin órdenes constantes | Alimento, descanso, refugio y un oficio persistente |
 | Primera transición | La evolución cambia el juego | Pasar del campamento a una comunidad agrícola estable |

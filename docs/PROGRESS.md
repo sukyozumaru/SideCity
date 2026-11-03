@@ -27,6 +27,6 @@ SideCity combina diseño urbano, órdenes directas a habitantes y vida cotidiana
 
 El usuario añadió evolución de la humanidad por eras y elementos sandbox, y pidió organizar las ideas para definir SideCity. Se consolida la dirección en `SIDECITY.md`, separando era tecnológica de tamaño del asentamiento. Es diseño de trabajo; colonos, necesidades, eras y sandbox todavía no se implementan en esta entrega de terreno.
 
-Última precisión del usuario: comenzar con un humano y hacer aparecer un segundo para iniciar la comunidad. Cada etapa abre edificios, roles, trabajos, inventos, mentalidades y reglas. El primer prototipo de habitantes se ajusta a ese arranque; ya no empieza con tres colonos.
+Última corrección del usuario: comenzar con tres colonos fundadores juntos, quienes inician la humanidad, la sociedad y su evolución desde cero. Cada etapa abre edificios, roles, trabajos, inventos, mentalidades y reglas. Este arranque sustituye la propuesta anterior de un humano y la llegada posterior de otro.
 
-Siguiente prueba: un humano seleccionable, movimiento sobre tierra, primera recolección y llegada del segundo. Después, órdenes de grupo, obras con trabajadores, ocupaciones y rutinas; primera transición hacia agricultura y configuración sandbox separada.
+Siguiente prueba: tres fundadores seleccionables desde el inicio, movimiento sobre tierra, reparto de tareas y primera recolección. Después, obras con trabajadores, ocupaciones y rutinas; primera transición hacia agricultura y configuración sandbox separada.
