@@ -2,6 +2,8 @@
 
 Una civilización a escala de barrio: diseña la ciudad y dirige a las personas que la construyen. Las referencias expresadas por el usuario son SimCity, Age of Empires y Los Sims, con controles sencillos y una identidad propia.
 
+La evolución humana por eras y el sandbox se suman como dirección de desarrollo. La definición unificada y el alcance de cada prototipo están en [docs/SIDECITY.md](docs/SIDECITY.md).
+
 ## Versión 0.1 · Terreno y cámara
 
 Reconstrucción limpia autorizada el 3 de noviembre de 2026. La nueva aplicación sustituye el prototipo lateral como fuente de desarrollo. El ZIP anterior ya no es una dependencia.

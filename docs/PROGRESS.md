@@ -25,4 +25,8 @@ Revisión visual propia: diseño 7,5; uso 8; creatividad 7; contenido 8; total p
 
 SideCity combina diseño urbano, órdenes directas a habitantes y vida cotidiana sencilla. Referencias: SimCity, Age of Empires y Los Sims. Regla: seleccionar una persona, indicar un destino o tarea y dejar que siga su rutina al quedar libre. Se conserva una interfaz comprensible; necesidades personales, relaciones y sistemas de gran escala entran por etapas.
 
-Siguiente prueba: colonos seleccionables, órdenes de movimiento sobre tierra y recolección de madera con rutas. Después, construir con trabajadores y añadir ocupaciones y rutinas, antes de ampliar necesidades personales.
+El usuario añadió evolución de la humanidad por eras y elementos sandbox, y pidió organizar las ideas para definir SideCity. Se consolida la dirección en `SIDECITY.md`, separando era tecnológica de tamaño del asentamiento. Es diseño de trabajo; colonos, necesidades, eras y sandbox todavía no se implementan en esta entrega de terreno.
+
+Última precisión del usuario: comenzar con un humano y hacer aparecer un segundo para iniciar la comunidad. Cada etapa abre edificios, roles, trabajos, inventos, mentalidades y reglas. El primer prototipo de habitantes se ajusta a ese arranque; ya no empieza con tres colonos.
+
+Siguiente prueba: un humano seleccionable, movimiento sobre tierra, primera recolección y llegada del segundo. Después, órdenes de grupo, obras con trabajadores, ocupaciones y rutinas; primera transición hacia agricultura y configuración sandbox separada.

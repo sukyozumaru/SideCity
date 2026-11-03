@@ -1,96 +1,81 @@
-# Plan de evolución de SideCity
+# SideCity · Plan de desarrollo vigente
 
-## Dirección
+Dirección: [SIDECITY.md](SIDECITY.md). Estado comprobado: [PROGRESS.md](PROGRESS.md). Arte y procedencia: [ART_DIRECTION.md](ART_DIRECTION.md) y [ASSETS.json](ASSETS.json).
 
-SideCity será un constructor de ciudades de sesiones cortas, con el placer visual de ver crecer un barrio y decisiones comprensibles sobre conexiones, servicios y presupuesto. CityVille y SimCity son las referencias expresadas por el usuario. La propuesta adopta construcción accesible y consecuencias urbanas legibles; edificios, interfaz y recursos visuales serán propios.
+## Objetivo
 
-Bucle central: explorar → trazar una calle → colocar viviendas y comercios → conectar servicios → observar ocupación e ingresos → resolver una necesidad → ampliar o mejorar el barrio.
+Una civilización que construyes, diriges y ves vivir a través de las eras. Diseñar el asentamiento, dar órdenes a sus habitantes y permitir rutinas autónomas deben funcionar juntos con controles sencillos en móvil.
 
-Prioridad de plataforma: navegador móvil con Safari en iPhone, además de escritorio con ratón. El mundo empieza sin edificios construidos; río, vegetación y relieve visual forman el terreno inicial. La cámara es isométrica fija con arrastre y zoom. La elevación aparente de fachadas y tejados produce el 2.5D.
+El arranque definido por el usuario es un humano inicial. Tras su primera tarea guiada aparece el segundo y empieza la comunidad. Cada era abre edificios, roles, trabajos, inventos, reglas y formas de organizarse. Tamaño urbano y era tecnológica son ejes distintos.
 
-## Punto de partida y alcance
+## Estado actual
 
-La aplicación activa es la reconstrucción isométrica en `index.html` y `src/`, autorizada el 3 de noviembre de 2026. El HTML lateral queda archivado. No dependemos del ZIP del chat anterior. Ver `PROGRESS.md` para las verificaciones completadas y las pruebas de dispositivo pendientes.
+La etapa de terreno y cámara se reconstruyó con autorización del usuario; no depende del ZIP anterior. La aplicación activa está en `index.html` y `src/`. El prototipo lateral se conserva en `legacy/`, fuera de la nueva aplicación.
 
-El usuario amplió la dirección: combinar diseño urbano de SimCity, órdenes a habitantes de Age of Empires y vida cotidiana de Los Sims, con identidad propia y complejidad gradual. La siguiente etapa incorpora colonos seleccionables y asignación directa de tareas. Las rutinas autónomas y necesidades personales sencillas se construyen sobre ese mismo sistema de órdenes.
+Implementado: terreno 48 × 48, río conectado, vegetación, proyección isométrica, inspección, cuadrícula, minimapa, arrastre y zoom táctil. Siete pruebas de reglas y gestos; revisión en navegador móvil emulado. Pendiente: Safari en iPhone físico.
 
-La primera versión completa debe permitir jugar 15–20 minutos: construir y guardar un barrio funcional, entender una falta de servicio y resolverla, mejorar un edificio y alcanzar el siguiente hito. Es un objetivo de diseño que debe validarse jugando, no una duración medida.
+Habitantes, construcción, necesidades, eras y sandbox están diseñados, pero aún no forman parte del juego ejecutable.
 
-## Etapas y condiciones de cierre
+## Entregas por dependencia
 
-| Etapa | Entrega | Se cierra cuando |
+| Bloque | Entrega | Condición de cierre |
 | --- | --- | --- |
-| Base recuperable | Repositorio privado, archivo original, auditoría, último ZIP incorporado o decisión documentada de reconstruir | Se conoce qué versión es la fuente de trabajo y se puede reproducir su arranque |
-| Terreno y cámara | Mapa 48 × 48, semilla reproducible, río, árboles, proyección/inversa y cámara táctil | Selección de casillas correcta en bordes y zoom; arrastrar o pellizcar nunca construye; ninguna zona jugable queda inaccesible |
-| Construcción y guardado | Huellas por casilla, previsualización, validación, selección, mejora y demolición; guardado versionado | No hay solapes ni cobros al fallar; recargar restaura mapa y presupuesto; un archivo inválido no destruye la última partida válida |
-| Calles y servicios | Calles conectables, cruces, puente, acceso de edificios y capacidad de energía/agua/comida | Cortar una conexión modifica el acceso y la UI explica la causa; reparar la red restaura el servicio |
-| Primer barrio vivo | Ocupación gradual, hogares, empleos, comercios y viajes por rutas válidas | La población cambia por condiciones urbanas y los agentes siguen calles; no atraviesan agua o edificios |
-| Economía y progreso | Ingresos y mantenimiento, objetivos únicos, mejoras y primeros hitos | Se completa una sesión de 15–20 minutos sin recompensas duplicadas ni bloqueo económico inevitable; cada compra explica su efecto |
-| Acabado y beta móvil | Arte coherente, sonidos, ajustes, rendimiento y acceso web para pruebas | Safari en iPhone real supera la lista de aceptación y se miden los presupuestos de rendimiento |
+| Terreno y cámara | Mundo vacío legible y navegable | Casillas correctas a cualquier zoom, todas las esquinas accesibles, arrastre/pellizco/cancelación sin selección accidental; falta validar dispositivo físico |
+| Primer humano | Una persona seleccionable, con nombre y orden visible | Se mueve por rutas válidas y completa una recolección; no atraviesa agua ni árboles |
+| Primera comunidad | Segundo humano tras la primera tarea; órdenes individuales y de grupo | Aparece una sola vez, las órdenes pueden cambiarse y no se duplican recursos |
+| Primer refugio | Proyecto de obra, materiales y constructores asignados | Los materiales se reservan una vez; cancelar y reanudar no los duplica ni los pierde indebidamente |
+| Rutinas y aldea | Alimento, descanso, refugio y oficios persistentes | Al acabar una orden vuelven al trabajo o rutina; se entiende por qué dejan de trabajar |
+| Primera era | Pasar del campamento a una comunidad agrícola | El avance exige una capacidad demostrada y una decisión; desbloquea una acción, un trabajo y un cambio visual |
+| Sandbox inicial | Configuración por partida para experimentar | Recursos y necesidades ajustables; no se transfieren ventajas a partidas de progreso |
+| Ciudad y nuevas eras | Artesanía, intercambio, redes y servicios más complejos | Cada incorporación tiene una necesidad jugable previa; se mide rendimiento y facilidad de uso antes de crecer |
 
-El orden respeta las dependencias: no implementar tráfico antes del grafo vial, ni ajustar toda la economía antes de corregir recompensas y ocupación.
+No implementar el árbol completo de eras antes de conseguir el primer refugio y el ciclo de trabajo. El catálogo moderno del prototipo antiguo es una referencia histórica, no el contenido inicial.
 
-## Evolución de la ciudad
+## Arquitectura
 
-Los nombres ya existen en el prototipo. Las funciones de esta tabla son la propuesta de evolución, no características terminadas ni umbrales definitivos.
+Conservar JavaScript, Canvas 2D y módulos nativos. La etapa actual no requiere instalar dependencias. Medir antes de cambiar de renderizador.
 
-| Hito | Nueva decisión del jugador | Cambio visible |
-| --- | --- | --- |
-| Aldea | Ubicar casas, comida, agua y primera fuente de energía | Parcelas pequeñas, caminos iniciales y viviendas bajas |
-| Pueblo | Unir hogares con comercios y administrar mantenimiento | Fachadas variadas, ocupación y primeros vehículos |
-| Villa | Elegir cobertura de parques y escuela frente a expansión | Equipamientos de barrio, pequeñas plazas y edificios mejorados |
-| Ciudad | Equilibrar densidad, empleo y atención de emergencias | Apartamentos, comercio mayor y servicios especializados |
-| Metrópolis | Resolver congestión y distribuir actividad por distritos | Corredores comerciales y transporte colectivo si la red lo necesita |
-| Megaciudad | Optimizar calidad de vida, presupuesto y espacio | Skyline propio y proyectos urbanos de gran escala |
+- Terreno, proyección y cámara independientes del DOM.
+- Input separado de selección y órdenes: un gesto de cámara nunca confirma una tarea.
+- Habitantes con estados explícitos; decisión, ruta y movimiento separados.
+- Grafo de casillas transitables y rutas calculadas al recibir órdenes o cambiar obstáculos.
+- Construcción mediante comandos que validan ocupación, materiales y trabajo antes de mutar estado.
+- Simulación de recursos y necesidades con paso fijo, independiente de cuadros y animación.
+- Progresión definida por datos: requisitos, inventos, logros, costes y efectos.
+- Guardado versionado con validación y copia recuperable. Las preferencias actuales de cámara no equivalen a un guardado de civilización.
+- HUD actualizado por eventos; fichas contextuales muestran orden, progreso y causa de interrupción.
 
-Balancear primero Aldea y Pueblo. Reutilizar los desbloqueos existentes solo si encajan con el nuevo bucle. No fijar requisitos de población finales hasta medir sesiones completas.
+La altura visual de un objeto nunca determina su huella. Guardar identificadores y datos lógicos, no referencias al DOM o partículas.
 
-## Arquitectura propuesta
+## Primer bloque de habitantes
 
-Conservar JavaScript y Canvas 2D para la primera etapa. La base disponible no tiene un motor externo; cambiarlo ahora añadiría una migración antes de recuperar la última versión. Revisar el renderizador solo si las mediciones justifican el cambio.
+1. Dibujar y probar un humano en el terreno aprobado, con escala y profundidad coherentes.
+2. Seleccionarlo y mostrar nombre, tarea actual y acción contextual.
+3. Ordenarle caminar; resolver rutas por tierra y rechazar destinos inaccesibles.
+4. Recolectar madera con tiempo de trabajo y resultado verificable.
+5. Hacer aparecer el segundo humano una sola vez tras completar la primera tarea.
+6. Asignar órdenes independientes y probar selección del grupo.
 
-Separar los sistemas progresivamente:
+Mantener la escena reducida: aún sin hambre compleja, relaciones, comercio ni inventario detallado. Al validar el control directo, producir el primer refugio y sus materiales.
 
-- `world`: terreno, semilla, casillas, ocupación y coordenadas lógicas.
-- `render`: proyección isométrica, orden de profundidad, descarte fuera de cámara y animación visual.
-- `camera` e `input`: arrastre, zoom anclado, selección y cancelación de gestos.
-- `construction`: comandos para colocar, mejorar, mover cuando se incorpore y demoler; validación previa al cobro.
-- `simulation`: reloj fijo, ocupación, recursos y economía; independiente de los cuadros dibujados.
-- `roads` y `agents`: conectividad, rutas y viajeros; volver a calcular al cambiar la red.
-- `progression`: catálogo, desbloqueos, objetivos con identificador y recompensas idempotentes.
-- `persistence`: versión, validación, copia de respaldo y exportación/importación.
-- `ui`: HUD que reacciona a eventos y paneles del edificio seleccionado.
+## Desarrollo visual
 
-Un edificio guarda su identificador de tipo, posición de casilla, huella, nivel y ocupación. La altura dibujada nunca determina la huella. El estado persistido no debe incluir referencias al DOM, partículas o nodos de audio.
+Conservar el estilo aprobado del valle. Orden de producción: personaje representativo → animación de caminar y trabajar → primer refugio en obra y terminado → familia pequeña de recursos/edificios de la primera etapa. Probar cada familia a tamaño de teléfono y con el zoom habitual antes de ampliarla.
 
-## Construcción y controles
+Cada era cambia materiales, siluetas, herramientas y actividad manteniendo el lugar reconocible. Las sombras del mundo explican volumen; la interfaz permanece discreta. No usar emojis como arte definitivo. Respetar movimiento reducido y permitir silencio.
 
-En móvil, elegir edificio abre una previsualización desplazable y un botón de confirmar; mover la cámara sigue siendo posible. El gasto ocurre una vez al confirmar una posición válida. Cancelar, perder un puntero o iniciar un pellizco invalida el toque de construcción pendiente. En escritorio, clic y Escape ofrecen el mismo flujo.
+## Validación
 
-La selección resalta la huella y abre una ficha con coste de mantenimiento, residentes o empleo, conexión y servicio faltante. Las herramientas de construir, inspeccionar y demoler tienen estados explícitos. Demoler muestra devolución y efecto antes de confirmar; el sandbox usa una partida separada.
+Pruebas de reglas: coordenadas, ocupación, rutas, selección/órdenes, materiales reservados, recompensas únicas, aparición única del segundo habitante y migración de guardados. Probar comportamiento observable en vez de replicar cada función de dibujo.
 
-## Dirección de gráficos y sonido
+Interacción: toque, arrastre, pellizco, cancelación, varios dedos, rotación del dispositivo y reanudación tras cambiar de aplicación. Revisar 390 × 844, 844 × 390, 768 × 1024 y 1440 × 900. La emulación no sustituye Safari en un iPhone real.
 
-Ver `ART_DIRECTION.md`. Secuencia: fijar proyección y escala → aprobar una calle, una casa y un árbol dentro del juego → completar el conjunto del primer barrio → añadir niveles visuales y animaciones. No producir decenas de edificios antes de probar escala, lectura y oclusión en el teléfono.
+Objetivo de rendimiento posterior: aspirar a 60 fps y mantener al menos 30 fps en el dispositivo elegido, con una escena documentada; medir percentil 95 de tiempo de cuadro durante dos minutos. El límite de 150 edificios y 50 agentes del plan inicial se conserva solo como una carga futura de referencia. No es una capacidad demostrada de la versión actual.
 
-Los sonidos comunican colocar, error, mejora y nuevo hito. Iniciar audio tras interacción del jugador; ofrecer silencio persistente. Los eventos y el ciclo día/noche llegan cuando el barrio base es legible de día y de noche.
+Antes de beta, medir arranque, trabajo fuera de cámara, memoria de cachés, agentes y partículas. Publicar el juego será una acción separada: un repositorio privado no crea por sí solo una URL de pruebas.
 
-## Calidad y criterios de aceptación
+## Decisiones posteriores
 
-Pruebas automatizadas centradas en reglas: conversión entre coordenadas, ocupación de huellas, saldo tras acciones válidas/inválidas, conexión de calles, recompensas cobradas una vez y validación/migración de guardados. No escribir pruebas que solo repitan cada función de dibujo.
+Combate, diplomacia, multijugador, relaciones familiares profundas, terraformación y catástrofes se decidirán después. El futuro tecnológico es opcional. No se presupone que una referencia obligue a incorporar todos sus sistemas.
 
-Pruebas de interacción: toque, arrastre, pellizco, cancelación, paneles, orientación y reanudación tras cambiar de aplicación. Revisar tamaños 390 × 844, 844 × 390, 768 × 1024 y 1440 × 900. Una emulación de tamaño no sustituye Safari en un iPhone real.
-
-Presupuestos iniciales por validar: aspirar a 60 fps y mantener al menos 30 fps en el iPhone elegido para pruebas, en una escena de 150 edificios y 50 agentes visibles; medir percentil 95 de tiempo de cuadro durante dos minutos. Si no se cumple, medir y reducir trabajo fuera de cámara, limitar agentes/partículas y cachear terreno antes de cambiar de tecnología. Primer barrio interactivo en menos de cinco segundos en la conexión de prueba documentada. Son metas, no mediciones actuales.
-
-Guardar al cambiar la ciudad, con escritura diferida, además de al ocultar la página. Mostrar fallo de almacenamiento y permitir exportar una copia. Para beta, evaluar publicación web separadamente: un repositorio privado no publica automáticamente el juego ni protege una URL de pruebas.
-
-## Prioridades del siguiente bloque
-
-1. Incorporar la última entrega si está disponible y registrar su diferencia frente al archivo conservado.
-2. Confirmar que el estado inicial está vacío y que el mapa tiene coordenadas lógicas independientes del dibujo.
-3. Verificar proyección, selección, profundidad y límites de cámara en un mapa 48 × 48.
-4. Cerrar los gestos táctiles sin colocaciones accidentales.
-5. Entregar una escena pequeña verificable: terreno, río, árboles, una calle y una vivienda.
-
-Después: construcción y guardado, red vial, barrio vivo, economía y contenido. Multijugador, cuentas, pagos, rotación libre de cámara, terreno terraformable y grandes desastres quedan para una decisión posterior al primer barrio validado. Caos y recompensas diarias existentes se reevaluarán por su aportación al juego.
+Las eras avanzan por logros y decisión del jugador, no por un reloj inevitable. El sandbox permite ajustar la experiencia por partida. La identidad de SideCity se comprueba en el primer humano, la primera colaboración y la primera transformación visible del asentamiento.
