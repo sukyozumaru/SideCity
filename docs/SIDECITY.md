@@ -1,5 +1,7 @@
 # SideCity · Identidad del juego
 
+Estado implementado 0.3: refugio cooperativo, agua y descanso, mundo procedural de 96 × 72, expansión por sectores y progreso de Orígenes. Las reglas actuales están en `REFUGE.md` y `WORLD.md`; las secciones de visión de este documento incluyen sistemas futuros.
+
 Documento de dirección, 3 de noviembre de 2026. Reúne las ideas expresadas por el usuario y propone una estructura para convertirlas en un juego coherente. El arte del terreno está aprobado. Eras, sistemas y nombres que aún no existen se describen como diseño de trabajo, no como funciones terminadas.
 
 ## La idea central

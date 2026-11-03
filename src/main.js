@@ -2,10 +2,12 @@ import { Camera, Gestures, createWorld, unproject, clamp } from './core.js';
 import { Renderer } from './renderer.js';
 import { loadSimulation, saveSimulation } from './persistence.js';
 import { PeopleUI } from './people-ui.js';
+import { WorldUI } from './world-ui.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('world'), viewport = $('viewport');
-const world = createWorld(), camera = new Camera(viewport.clientWidth, viewport.clientHeight);
+const requestedSeed=Number(new URL(location.href).searchParams.get('seed'));
+const world = createWorld(Number.isInteger(requestedSeed)&&requestedSeed>0&&requestedSeed<=2147483647?requestedSeed:48128), camera = new Camera(viewport.clientWidth, viewport.clientHeight);
 const renderer = new Renderer(canvas, $('minimap'), world, camera);
 const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
 renderer.reducedMotion = motionPreference.matches;
@@ -17,20 +19,21 @@ try { storage = localStorage; } catch { storage = { getItem() { return null; }, 
 const loaded = loadSimulation(world, storage), simulation = loaded.simulation;
 renderer.simulation = simulation;
 const peopleUI = new PeopleUI(simulation, renderer, camera, invalidate);
+const worldUI=new WorldUI(simulation,renderer,peopleUI,persist,invalidate);
 let paused = false, speed = 1, accumulator = 0, previousTime = 0, lastUI = 0, lastSave = 0, savedRevision = -1;
 if (loaded.blocked) { $('save-status').textContent = 'Guardado protegido'; peopleUI.notify('El guardado no se pudo leer. Conservamos sus datos; esta sesión no los sobrescribirá.'); }
 if (loaded.recovered) peopleUI.notify('Se recuperó la última copia válida de tu comunidad.');
 function persist() {
-  if (loaded.blocked) return;
-  try { saveSimulation(simulation, storage); $('save-status').textContent = 'Guardado local'; savedRevision = simulation.revision; }
-  catch { $('save-status').textContent = 'No se pudo guardar'; }
+  if (loaded.blocked) return false;
+  try { saveSimulation(simulation, storage); $('save-status').textContent = 'Guardado local'; savedRevision = simulation.revision; return true; }
+  catch { $('save-status').textContent = 'No se pudo guardar'; return false; }
 }
 $('pause-sim').onclick = () => { paused = !paused; $('pause-sim').textContent = paused ? 'Continuar' : 'Pausar'; $('pause-sim').setAttribute('aria-pressed', String(paused)); };
 $('sim-speed').onclick = () => { speed = speed === 1 ? 3 : 1; $('sim-speed').textContent = `${speed}×`; };
 function saveView() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
-    try { localStorage.setItem('sidecity-camera-v1', JSON.stringify({ seed: world.seed, x: camera.x, y: camera.y, zoom: camera.zoom, grid: renderer.grid })); } catch { /* Camera preferences are optional; terrain remains usable. */ }
+    try { localStorage.setItem(`sidecity-camera-v1-${world.seed}`, JSON.stringify({ seed: world.seed, x: camera.x, y: camera.y, zoom: camera.zoom, grid: renderer.grid })); } catch { /* Camera preferences are optional; terrain remains usable. */ }
   }, 250);
 }
 function updateCamera() {
@@ -47,7 +50,8 @@ function clearSelection() { renderer.selected = null; $('parcel').hidden = true;
 function select(x, y) {
   if (peopleUI.tap(x, y)) return;
   const tile = cellAt(x, y);
-  if (peopleUI.selected.length) { if (tile) peopleUI.order('move', { x: tile.x, y: tile.y }); return; }
+  if(tile&&!simulation.isUnlocked(tile.x,tile.y)){worldUI.inspect(tile);return;}
+  if (peopleUI.selected.length) { peopleUI.interact(x, y); return; }
   renderer.selected = tile;
   $('parcel').hidden = !tile;
   if (!tile) { invalidate(); return; }
@@ -57,6 +61,7 @@ function select(x, y) {
   $('parcel-coordinates').textContent = `${tile.x + 1} / ${tile.y + 1}`;
   $('parcel-state').textContent = tile.type === 'water' ? 'Agua' : tile.type === 'bank' ? 'Orilla natural' : tile.tree ? 'Con vegetación' : 'Despejado';
   $('status').textContent = `${name}. Parcela ${tile.x + 1}, ${tile.y + 1}.`;
+  worldUI.inspect(tile);
   invalidate();
 }
 const gestures = new Gestures(camera, select);
@@ -95,8 +100,8 @@ $('explore').onclick = () => { peopleUI.choose([]); clearSelection(); canvas.foc
 $('close-parcel').onclick = clearSelection;
 $('minimap').addEventListener('pointerdown', e => {
   const r = $('minimap').getBoundingClientRect();
-  camera.x = ((e.clientX - r.left) * 192 / r.width - 96) / .046;
-  camera.y = ((e.clientY - r.top) * 112 / r.height - 8) / .046;
+  camera.x = ((e.clientX - r.left) * 192 / r.width - renderer.mini.x) / renderer.mini.scale;
+  camera.y = ((e.clientY - r.top) * 112 / r.height - renderer.mini.y) / renderer.mini.scale;
   camera.bound(); updateCamera();
 });
 $('minimap').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); camera.fit(); updateCamera(); } });
@@ -114,7 +119,7 @@ for (const id of ['close-help', 'start-exploring']) $(id).onclick = () => $('hel
 new ResizeObserver(() => { gestures.cancelAll(); renderer.resize(viewport.clientWidth, viewport.clientHeight); camera.bound(); updateCamera(); }).observe(viewport);
 renderer.resize(viewport.clientWidth, viewport.clientHeight); camera.home();
 try {
-  const saved = JSON.parse(localStorage.getItem('sidecity-camera-v1'));
+  const saved = JSON.parse(localStorage.getItem(`sidecity-camera-v1-${world.seed}`)||localStorage.getItem('sidecity-camera-v1'));
   if (saved?.seed === world.seed && [saved.x, saved.y, saved.zoom].every(Number.isFinite)) {
     camera.x = saved.x; camera.y = saved.y; camera.zoom = clamp(saved.zoom, camera.minZoom, camera.maxZoom); camera.bound(); renderer.grid = saved.grid === true;
     $('grid').setAttribute('aria-pressed', String(renderer.grid)); $('grid').classList.toggle('active', renderer.grid);
@@ -123,12 +128,12 @@ try {
 updateCamera();
 function frame(time) {
   const dt = previousTime ? Math.min((time - previousTime) / 1000, .25) : 0; previousTime = time;
-  if (!document.hidden && !paused && !$('help-dialog').open) {
+  if (!document.hidden && !paused && !$('help-dialog').open && !$('world-dialog').open && !$('era-dialog').open) {
     accumulator += dt * speed;
     while (accumulator >= .1) { simulation.update(.1); accumulator -= .1; }
   }
   if (!document.hidden && time - lastUI >= 200) {
-    peopleUI.refresh(); lastUI = time;
+    peopleUI.refresh(); worldUI.refresh(); lastUI = time;
     if (simulation.events.length) peopleUI.notify(simulation.events.splice(0).join(' '));
   }
   if (time - lastSave >= 5000 || simulation.revision !== savedRevision && time - lastSave >= 750) { persist(); lastSave = time; }

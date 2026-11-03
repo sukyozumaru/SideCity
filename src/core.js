@@ -1,4 +1,5 @@
-export const SIZE = 48;
+import { generateTerrain, WORLD_WIDTH, WORLD_HEIGHT } from './terrain.js';
+export { WORLD_WIDTH, WORLD_HEIGHT } from './terrain.js';
 export const TILE_W = 80;
 export const TILE_H = 40;
 export const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
@@ -9,25 +10,9 @@ export function hash(x, y, seed = 48128) {
   n = Math.imul(n ^ n >>> 13, 1274126177);
   return ((n ^ n >>> 16) >>> 0) / 4294967296;
 }
-export function createWorld(seed = 48128) {
-  const tiles = [], trees = [];
-  for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
-    const river = 24 + Math.sin(x * .14 + .4) * 5 + Math.sin(x * .31) * 1.1;
-    const distance = Math.abs(y + .5 - river);
-    const bank = distance < 3.9 && distance >= 2.7;
-    const type = distance < 2.7 ? 'water' : bank ? 'bank' : 'grass';
-    const clearing = Math.hypot(x - 20, y - 16) < 6.8;
-    const forest = Math.sin(x * .22) * Math.cos(y * .19) > -.1;
-    const tree = type === 'grass' && !clearing && hash(x, y, seed) > (forest ? .70 : .95);
-    const tile = { x, y, type, tree, variation: hash(x + 200, y, seed) };
-    tiles.push(tile);
-    if (tree) trees.push({ x: x + .3 + hash(x, y + 50, seed) * .4, y: y + .3 + hash(x + 60, y, seed) * .4, variant: Math.floor(hash(x + 44, y, seed) * 6) });
-  }
-  trees.sort((a, b) => a.x + a.y - b.x - b.y);
-  return { seed, tiles, trees, get(x, y) { return x >= 0 && y >= 0 && x < SIZE && y < SIZE ? tiles[y * SIZE + x] : null; } };
-}
+export function createWorld(seed = 48128) { return generateTerrain(seed, hash); }
 export class Camera {
-  constructor(width, height) { this.width = width; this.height = height; this.x = 0; this.y = 960; this.zoom = .6; this.minZoom = .06; this.maxZoom = 1.8; }
+  constructor(width, height) { this.width = width; this.height = height; this.x = 0; this.y = 960; this.zoom = .6; this.minZoom = .025; this.maxZoom = 1.8; }
   screenToWorld(x, y) { return { x: (x - this.width / 2) / this.zoom + this.x, y: (y - this.height / 2) / this.zoom + this.y }; }
   worldToScreen(x, y) { return { x: (x - this.x) * this.zoom + this.width / 2, y: (y - this.y) * this.zoom + this.height / 2 }; }
   zoomAt(zoom, x, y) {
@@ -41,10 +26,10 @@ export class Camera {
   bound() {
     // Keep the focus inside the map diamond; its shore remains visible at every edge.
     const cell = unproject(this.x, this.y);
-    const p = project(clamp(cell.x, 0, SIZE), clamp(cell.y, 0, SIZE));
+    const p = project(clamp(cell.x, 0, WORLD_WIDTH), clamp(cell.y, 0, WORLD_HEIGHT));
     this.x = p.x; this.y = p.y;
   }
-  fit() { this.zoom = clamp(Math.min((this.width - 80) / (SIZE * TILE_W), (this.height - 90) / (SIZE * TILE_H + 130)), this.minZoom, .7); this.x = 0; this.y = SIZE * TILE_H / 2 - 15; }
+  fit() { const span = WORLD_WIDTH + WORLD_HEIGHT; this.zoom = clamp(Math.min((this.width - 80) / (span * TILE_W / 2), (this.height - 90) / (span * TILE_H / 2 + 130)), this.minZoom, .7); const p=project(WORLD_WIDTH/2,WORLD_HEIGHT/2);this.x=p.x;this.y=p.y-15; }
   home() { const p = project(21, 18); this.x = p.x; this.y = p.y; this.zoom = this.width < 700 ? .72 : .9; }
 }
 export class Gestures {

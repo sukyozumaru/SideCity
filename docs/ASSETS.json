@@ -9,6 +9,9 @@
     {"id":"details","source":"src/renderer.js","variants":["grass tufts","flowers","stones","reeds","water glints"],"collision":"none"},
     {"id":"interface","source":"index.html","format":"inline SVG","variants":["parcel mark","map","grid","fit","home","north"],"collision":"none"},
     {"id":"founders","source":"src/renderer.js: drawPerson","variants":["Ana","Ivo","Nara"],"anchor":"feet on logical parcel","animation":["walk","work"],"collision":"land paths"},
-    {"id":"camp","source":"src/renderer.js","variants":["berry shrub","depleted shrub","stump","stone firepit","controlled fire"],"collision":"logical resource state in simulation.js"}
+    {"id":"camp","source":"src/renderer.js","variants":["berry shrub","depleted shrub","stump","stone firepit","controlled fire"],"collision":"logical resource state in simulation.js"},
+    {"id":"shelter","source":"src/camp-renderer.js","variants":["foundation","posts","walls","roof frame","thatched shelter","sleeping mats"],"footprint":[2,2],"collision":"reserved construction plot"},
+    {"id":"world-materials","source":"src/terrain.js + src/renderer.js","variants":["stone","coal","iron","copper","tin","silver","sticks","pebbles"],"collision":"ore deposits block; ground scatter does not"},
+    {"id":"colonist-actions","source":"src/people-renderer.js","variants":["directional walk","chopping","gathering","building","drinking","seated rest","sleep"],"timing":"simulation clock; visual smoothing separate"}
   ]
 }

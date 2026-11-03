@@ -1,35 +1,28 @@
-# Punto de continuación · SideCity 0.2
+# Punto de continuación · SideCity 0.3
 
-Pausa solicitada por el usuario el 3 de noviembre de 2026. No añadir funciones hasta que pida continuar.
+Desarrollo retomado el 3 de noviembre de 2026. Conservar el arte isométrico aprobado, los tres fundadores y el mapa a pantalla completa con HUD verde oscuro.
 
 ## Implementado
 
-- Mapa isométrico 48 × 48, río, árboles, cámara táctil y minimapa.
-- Tres fundadores: Ana, Ivo y Nara. Selección individual o de los tres, movimiento con rutas por tierra.
-- Talar, recolectar, estudiar, explorar, preparar fogón y cocinar.
-- Seis habilidades por persona, XP por trabajos completados, niveles 1–20, especialidad, práctica e historial.
-- Recursos finitos, descubrimiento del fuego, fogón único y consumo de ingredientes.
-- Guardado local validado y copia de respaldo; órdenes y progreso recuperables.
-- Menús Tareas / Habilidades / Historial.
-- Terreno a pantalla completa, sin franjas claras superior o inferior. HUD compacto verde oscuro. Título, área, ayuda y botones conservados por petición explícita.
+- Mundo procedural por semilla de 96 × 72: 6.912 parcelas, triple superficie. La semilla original conserva el valle previo.
+- Sectores iguales de 12 × 12: abrir un vecino cuesta inicialmente 8 madera y 1 saber; el coste crece. No se cobra una compra inválida.
+- Primer refugio compartido: reserva única de 20 madera, fases visibles, aportaciones de los tres, pausa, reanudación y cancelación con devolución.
+- Beber desde tierra junto al agua, descansar y dormir en tres puestos del refugio. Necesidades lentas, cuidado sin XP profesional.
+- Movimiento suavizado, orientación y animaciones de trabajo/cuidado; interacción directa con árboles, arbustos, agua y refugio.
+- Ramas y piedras recogibles; depósitos inspeccionables de piedra, carbón, hierro, cobre, estaño y plata. Bronce previsto como aleación.
+- Mini barra de Orígenes con etapa, logros, porcentaje, reloj y año ficticio.
+- Menús móviles Trabajar / Construir / Cuidarse, niveles visibles primero. Guardado por semilla con migración de partidas anteriores.
 
-## Comprobado
+## Verificado
 
-19 pruebas automatizadas pasan con `npm test`. Chrome verificó tareas simultáneas, XP independiente, producción, desbloqueo del fuego, fogón, cocina y recuperación al recargar. La revisión de pantalla completa pasó con 0 FAIL / 0 WARN a 1440, 768 y 390 píxeles. Hay capturas y pruebas adicionales en horizontal.
+33 pruebas pasan con npm test. Recorrido real en Chrome: recolección, construcción de los tres, sueño, bebida, recarga, compra de 144 parcelas y cambio de semilla conservando partidas; sin errores de JavaScript. Revisión visual a 1440, 768 y 390 píxeles: 0 FAIL / 0 WARN. También se revisaron menús móviles y horizontal. Safari/iPhone físico y rendimiento en ese dispositivo siguen pendientes.
 
-Después de esa revisión se hizo un ajuste pequeño de menús: Habilidades muestra primero los niveles; especialidad queda desplegable debajo; la ficha móvil se amplió y se compactaron las filas en horizontal. Comprobar visualmente ese último ajuste al retomar. Safari en iPhone físico y rendimiento de dispositivo siguen pendientes.
+## Retomar
 
-## Cómo retomar
+1. Ejecutar npm start y abrir http://127.0.0.1:4173.
+2. Leer docs/REFUGE.md, docs/WORLD.md y docs/PLAN.md para las reglas actuales.
+3. Próximo bloque sugerido: extracción de piedra y mineral con herramientas, recetas y desbloqueos coherentes con la era; después colocación libre de construcciones y puentes.
 
-1. Leer este archivo, `docs/SIDECITY.md` y `docs/PROFESSIONS.md`.
-2. Ejecutar `npm start` si el servidor local no sigue activo; abrir `http://127.0.0.1:4173`.
-3. Revisar Habilidades en móvil y horizontal, conservando el mapa a pantalla completa y los fondos oscuros.
-4. Próxima función prevista: primer refugio y obras asignables a trabajadores. No rediseñar el arte aprobado.
+Minería, fundición, agricultura, población creciente, transiciones completas de era y sandbox completo aún no están implementados. El 100% de Orígenes establece el campamento, sin inventar contenido de la siguiente era.
 
-Todavía no hay viviendas, hambre/descanso, autonomía por oficio, crecimiento de población, eras completas ni sandbox jugable. Esos sistemas están definidos en el plan y se incorporan por etapas.
-
-## Archivos principales
-
-`src/simulation.js`: tareas, rutas, experiencia y fundadores. `src/people-ui.js`: menús. `src/persistence.js`: guardado. `src/renderer.js`: arte original por código. `src/style.css`: HUD de pantalla completa. `tests/simulation.test.mjs`: reglas y regresiones.
-
-Se trabaja con módulos nativos sin instalar dependencias. El HTML antiguo queda en `legacy/`; no se usa como aplicación activa.
+Código principal: src/terrain.js, src/simulation.js, src/camp.js, src/era.js, src/world-ui.js, src/people-ui.js y los módulos de dibujo. Módulos nativos sin dependencias. legacy/ conserva el HTML antiguo y no es la aplicación activa.

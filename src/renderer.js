@@ -1,5 +1,7 @@
-import { SIZE, TILE_W, TILE_H, project, hash } from './core.js';
-import { SKILLS } from './simulation.js';
+import { TILE_W, TILE_H, project, hash } from './core.js';
+import { drawColonist } from './people-renderer.js';
+import { drawShelter } from './camp-renderer.js';
+import { SECTOR_SIZE, MINERALS } from './terrain.js';
 
 const grass = ['#91b56e', '#94b872', '#96b974', '#92b570', '#98ba75', '#90b36d'];
 function polygon(ctx, points, fill, stroke) {
@@ -43,13 +45,16 @@ export class Renderer {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.map = minimap; this.mc = minimap.getContext('2d');
     this.world = world; this.camera = camera; this.dpr = 1; this.grid = false; this.selected = null; this.hover = null;
     this.sprites = Array.from({ length: 6 }, (_, i) => makeTree(i));
-    this.cache = document.createElement('canvas'); this.cache.width = SIZE * TILE_W + 100; this.cache.height = SIZE * TILE_H + 180;
-    this.origin = { x: this.cache.width / 2, y: 75 }; this.buildTerrain();
+    this.cache = document.createElement('canvas'); this.cacheScale = .7;
+    this.cacheWidth = (world.width + world.height) * TILE_W / 2 + 100;
+    this.cacheHeight = (world.width + world.height) * TILE_H / 2 + 180;
+    this.cache.width = Math.ceil(this.cacheWidth * this.cacheScale); this.cache.height = Math.ceil(this.cacheHeight * this.cacheScale);
+    this.origin = { x: world.height * TILE_W / 2 + 50, y: 75 }; this.buildTerrain();
   }
   buildTerrain() {
-    const c = this.cache.getContext('2d'); c.translate(this.origin.x, this.origin.y); c.lineJoin = 'round';
+    const c = this.cache.getContext('2d'); c.scale(this.cacheScale,this.cacheScale); c.translate(this.origin.x, this.origin.y); c.lineJoin = 'round';
     // The front two faces expose a shallow slab of earth, with a turf lip above it.
-    const left = project(0, SIZE), front = project(SIZE, SIZE), right = project(SIZE, 0);
+    const left = project(0, this.world.height), front = project(this.world.width, this.world.height), right = project(this.world.width, 0);
     for (const [a, b, color] of [[left, front, '#8b795a'], [front, right, '#a49067']]) {
       polygon(c, [a, b, { x: b.x, y: b.y + 25 }, { x: a.x, y: a.y + 25 }], color);
       c.strokeStyle = '#c2ac791f'; c.lineWidth = 2;
@@ -90,7 +95,8 @@ export class Renderer {
   buildMiniTerrain() {
     const m = document.createElement('canvas'); m.width = 192; m.height = 112;
     const c = m.getContext('2d'); c.fillStyle = '#e0e7dc'; c.fillRect(0, 0, 192, 112);
-    c.translate(96, 8); c.scale(.046, .046);
+    const center=project(this.world.width/2,this.world.height/2),scale=Math.min(176/((this.world.width+this.world.height)*TILE_W/2),96/((this.world.width+this.world.height)*TILE_H/2));
+    this.mini={scale,x:96-center.x*scale,y:56-center.y*scale};c.translate(this.mini.x,this.mini.y);c.scale(scale,scale);
     for (const tile of this.world.tiles) diamond(c, tile.x, tile.y, tile.type === 'water' ? '#73aeb0' : tile.type === 'bank' ? '#bbc18a' : tile.tree ? '#547b49' : '#9bb779');
     this.miniTerrain = m;
   }
@@ -103,18 +109,36 @@ export class Renderer {
     const c = this.ctx, camera = this.camera, { width: w, height: h, zoom: z } = camera;
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.fillStyle = '#8a9d82'; c.fillRect(0, 0, w, h);
     c.translate(w / 2, h / 2); c.scale(z, z); c.translate(-camera.x, -camera.y);
-    c.drawImage(this.cache, -this.origin.x, -this.origin.y);
+    c.drawImage(this.cache, -this.origin.x, -this.origin.y, this.cacheWidth, this.cacheHeight);
     if (this.grid) {
       c.beginPath();
-      for (let i = 0; i <= SIZE; i++) for (const [a, b] of [[project(i, 0), project(i, SIZE)], [project(0, i), project(SIZE, i)]]) { c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); }
+      for(let x=0;x<=this.world.width;x++){const a=project(x,0),b=project(x,this.world.height);c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);}
+      for(let y=0;y<=this.world.height;y++){const a=project(0,y),b=project(this.world.width,y);c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);}
       c.strokeStyle = '#365a3430'; c.lineWidth = .75 / z; c.stroke();
+    }
+    if(this.simulation)for(let y=0;y<this.world.height/SECTOR_SIZE;y++)for(let x=0;x<this.world.width/SECTOR_SIZE;x++){
+      if(this.simulation.unlocked.has(`${x},${y}`))continue;
+      const a=x*SECTOR_SIZE,b=y*SECTOR_SIZE;
+      polygon(c,[project(a,b),project(a+SECTOR_SIZE,b),project(a+SECTOR_SIZE,b+SECTOR_SIZE),project(a,b+SECTOR_SIZE)],'#344c3d99','#9daf8133');
+      if(z>.15){const p=project(a+6,b+6);c.fillStyle='#d5dfbe';c.font=`${13/z}px system-ui`;c.textAlign='center';c.fillText('144 parcelas',p.x,p.y);}
     }
     const tile = this.selected || this.hover;
     if (tile) { c.lineWidth = 2 / z; diamond(c, tile.x, tile.y, this.selected ? '#f6f7cf55' : '#ffffff22', this.selected ? '#f9fbec' : '#e3ebce'); }
     const bounds = { left: camera.x - w / 2 / z - 100, right: camera.x + w / 2 / z + 100, top: camera.y - h / 2 / z - 50, bottom: camera.y + h / 2 / z + 170 };
-    const objects = this.world.trees.map(tree => ({ kind: 'tree', item: tree, x: tree.x, y: tree.y }));
+    const elapsed = Math.min(.1, Math.max(0, (time - (this.previousRender || time)) / 1000)); this.previousRender = time;
+    this.visualPeople ||= new Map();
+    const objects = this.world.trees.filter(tree=>!this.simulation||this.simulation.isUnlocked(tree.x,tree.y)).map(tree => ({ kind: 'tree', item: tree, x: tree.x, y: tree.y }));
     if (this.simulation) {
-      for (const person of this.simulation.people) objects.push({ kind: 'person', item: person, x: person.x, y: person.y });
+      for (const person of this.simulation.people) {
+        let visual = this.visualPeople.get(person.id);
+        if (!visual || Math.hypot(visual.x-person.x,visual.y-person.y)>4) visual={x:person.x,y:person.y};
+        const smoothing=1-Math.exp(-elapsed*24);visual.x+=(person.x-visual.x)*smoothing;visual.y+=(person.y-visual.y)*smoothing;this.visualPeople.set(person.id,visual);
+        objects.push({kind:'person',item:person,x:visual.x,y:visual.y});
+      }
+      for(const mineral of this.world.minerals)if(this.simulation.isUnlocked(mineral.x,mineral.y))objects.push({kind:'mineral',item:mineral,x:mineral.x+.5,y:mineral.y+.5});
+      for(const detail of this.world.scatter)if(this.simulation.isUnlocked(detail.x,detail.y)&&!this.simulation.scavenged.has(`${detail.x},${detail.y}`))objects.push({kind:'scatter',item:detail,x:detail.x+.5,y:detail.y+.5});
+      const shelter = this.simulation.shelter;
+      objects.push({kind:'shelter',x:shelter.x+shelter.width/2,y:shelter.y+shelter.height-.2});
       for (const bush of this.simulation.shrubs) objects.push({ kind: 'bush', item: bush, x: bush.x + .5, y: bush.y + .5 });
       objects.push({ kind: 'fire', x: 21.5, y: 16.5 });
     }
@@ -123,6 +147,9 @@ export class Renderer {
       c.globalAlpha = 1;
       const p = project(object.x, object.y);
       if (p.x < bounds.left || p.x > bounds.right || p.y < bounds.top || p.y > bounds.bottom) continue;
+      if(object.kind==='mineral'){this.drawMineral(object.item,p);continue;}
+      if(object.kind==='scatter'){this.drawScatter(object.item,p);continue;}
+      if (object.kind === 'shelter') { drawShelter(c, this.simulation.shelter); continue; }
       if (object.kind === 'person') { this.drawPerson(object.item, p, time); continue; }
       if (object.kind === 'bush') { this.drawBush(object.item, p); continue; }
       if (object.kind === 'fire') { this.drawFire(p, time); continue; }
@@ -132,7 +159,8 @@ export class Renderer {
       }
       const occluding = this.selected && Math.abs(p.x - project(this.selected.x + .5, this.selected.y + .5).x) < 45 && p.y > project(this.selected.x + .5, this.selected.y + .5).y && p.y - project(this.selected.x + .5, this.selected.y + .5).y < 120;
       c.globalAlpha = occluding ? .35 : 1;
-      c.drawImage(this.sprites[tree.variant], p.x - 72, p.y - 160);
+      const chopping=this.simulation?.people.some(person=>person.job?.kind==='logging'&&!person.job.path.length&&person.job.source?.x===Math.floor(tree.x)&&person.job.source?.y===Math.floor(tree.y));
+      c.save();c.translate(p.x,p.y);if(chopping&&!this.reducedMotion)c.rotate(Math.sin(this.simulation.time*9)*.018);c.drawImage(this.sprites[tree.variant],-72,-160);c.restore();
     }
     c.globalAlpha = 1;
     if (this.selected) {
@@ -148,42 +176,16 @@ export class Renderer {
         c.beginPath(); c.moveTo(p.x - 6, p.y); c.lineTo(p.x + 9, p.y); c.stroke();
       }
     }
+    if(this.simulation) for(const effect of this.simulation.feedback){
+      const age=this.simulation.time-effect.time,p=project(effect.x,effect.y);
+      c.save();c.globalAlpha=Math.max(0,1-age/1.6);c.fillStyle='#f1eed3';c.font=`600 ${12/z}px system-ui`;c.textAlign='center';c.fillText(effect.outcome,p.x,p.y-65-age*15);c.restore();
+    }
     this.drawMinimap();
   }
   drawPerson(person, p, time) {
-    const c = this.ctx, selected = this.selectedPeople?.includes(person.id), moving = person.job?.path.length > 0;
-    const working = person.job && !moving && SKILLS[person.job.kind] && person.state === SKILLS[person.job.kind].action;
-    const phase = this.reducedMotion ? 0 : time / (moving ? 90 : 250) + person.id.length;
-    c.save(); c.translate(p.x, p.y);
-    ellipse(c, 3, 1, 13, 5, '#294f3738');
-    if (selected) { c.strokeStyle = '#f9fbe7'; c.lineWidth = 2 / this.camera.zoom; c.beginPath(); c.ellipse(0, 0, 17, 8, 0, 0, Math.PI * 2); c.stroke(); }
-    const stride = moving ? Math.sin(phase) * 5 : 0, bob = moving ? Math.abs(Math.sin(phase)) * 1.5 : 0;
-    c.translate(0, -bob);
-    c.lineCap = 'round'; c.strokeStyle = '#4b4436'; c.lineWidth = 5;
-    c.beginPath(); c.moveTo(-4, -15); c.lineTo(-5 + stride, -2); c.moveTo(4, -15); c.lineTo(5 - stride, -2); c.stroke();
-    polygon(c, [{ x: -8, y: -34 }, { x: 7, y: -34 }, { x: 9, y: -14 }, { x: -8, y: -14 }], person.color);
-    polygon(c, [{ x: 0, y: -34 }, { x: 7, y: -34 }, { x: 9, y: -14 }, { x: 1, y: -14 }], '#2d403327');
-    c.strokeStyle = '#d4ac7e'; c.lineWidth = 4;
-    const arm = working ? Math.sin(phase * 3) * 6 : stride;
-    c.beginPath(); c.moveTo(-8, -31); c.lineTo(-12 - arm * .4, -21 - (working ? 6 : 0)); c.moveTo(8, -31); c.lineTo(12 + arm * .5, -20 - (working ? 8 : 0)); c.stroke();
-    ellipse(c, 0, -40, 7.5, 9, '#d7ae82');
-    ellipse(c, -1, -45, 8, 5.5, person.hair);
-    if (person.id === 'ana' || person.id === 'nara') ellipse(c, -7, -39, 3.5, 8, person.hair);
-    c.fillStyle = '#413a2e'; c.fillRect(3, -41, 1.2, 1.5);
-    c.strokeStyle = '#7b6545'; c.lineWidth = 2; c.beginPath(); c.moveTo(-7, -16); c.lineTo(8, -16); c.stroke();
-    if (working && person.job.kind === 'logging') {
-      c.save(); c.translate(14, -26); c.rotate(-.4 + Math.sin(phase * 3) * .5); c.strokeStyle = '#776047'; c.lineWidth = 3; c.beginPath(); c.moveTo(0, 8); c.lineTo(0, -12); c.stroke(); polygon(c, [{x:0,y:-13},{x:9,y:-12},{x:8,y:-5},{x:0,y:-6}], '#8f9787'); c.restore();
-    }
-    if (selected || this.camera.zoom > .65) {
-      c.font = `600 ${11 / this.camera.zoom}px system-ui`; c.textAlign = 'center'; c.textBaseline = 'bottom';
-      c.fillStyle = '#253e32'; const width = c.measureText(person.name).width;
-      c.fillRect(-width / 2 - 5 / this.camera.zoom, -65 - 15 / this.camera.zoom, width + 10 / this.camera.zoom, 19 / this.camera.zoom);
-      c.fillStyle = '#edf1e4'; c.fillText(person.name, 0, -64);
-    }
-    if (selected && working) { c.fillStyle = '#315d49'; c.fillRect(-15, -56, 30 * Math.min(person.job.progress, 1), 3); }
-    c.restore();
-    if (selected && person.job?.path.length) {
-      c.save(); c.lineWidth = 1.5 / this.camera.zoom; c.strokeStyle = '#f7f8dfbb'; c.setLineDash([4 / this.camera.zoom, 5 / this.camera.zoom]); c.beginPath(); c.moveTo(p.x, p.y);
+    drawColonist(this.ctx, person, p, { selected: this.selectedPeople?.includes(person.id), zoom: this.camera.zoom, time: this.simulation.time * 1000, reducedMotion: this.reducedMotion, progress: person.job?.kind === 'shelter' ? this.simulation.shelter.progress : person.job?.progress || 0 });
+    if (this.selectedPeople?.includes(person.id) && person.job?.path.length) {
+      const c = this.ctx; c.save(); c.lineWidth = 1.5 / this.camera.zoom; c.strokeStyle = '#f7f8dfaa'; c.setLineDash([4 / this.camera.zoom, 5 / this.camera.zoom]); c.beginPath(); c.moveTo(p.x, p.y);
       for (const step of person.job.path) { const s = project(step.x, step.y); c.lineTo(s.x, s.y); }
       c.stroke(); c.restore();
     }
@@ -204,11 +206,26 @@ export class Renderer {
     }
     c.restore();
   }
+  drawMineral(mineral,p){
+    const c=this.ctx,color=MINERALS[mineral.kind].color;
+    ellipse(c,p.x+4,p.y,23,8,'#344d3733');
+    polygon(c,[{x:p.x-22,y:p.y-3},{x:p.x-12,y:p.y-24},{x:p.x+8,y:p.y-32},{x:p.x+23,y:p.y-9},{x:p.x+15,y:p.y+3}], '#85907a');
+    polygon(c,[{x:p.x-22,y:p.y-3},{x:p.x-12,y:p.y-24},{x:p.x+3,y:p.y-12},{x:p.x+15,y:p.y+3}], '#a4ac91');
+    polygon(c,[{x:p.x-12,y:p.y-24},{x:p.x+8,y:p.y-32},{x:p.x+18,y:p.y-17},{x:p.x+3,y:p.y-12}], '#b7bba2');
+    for(let i=0;i<5;i++){const x=p.x-11+i*6,y=p.y-9-(i%3)*6;polygon(c,[{x,y},{x:x+4,y:y-5},{x:x+8,y:y-2},{x:x+4,y:y+2}],color);}
+  }
+  drawScatter(item,p){
+    const c=this.ctx;
+    if(item.kind==='sticks'){c.strokeStyle='#85714e';c.lineWidth=2.6;c.beginPath();c.moveTo(p.x-10,p.y+2);c.lineTo(p.x+9,p.y-5);c.moveTo(p.x-2,p.y-1);c.lineTo(p.x-5,p.y-8);c.moveTo(p.x-5,p.y+4);c.lineTo(p.x+10,p.y+1);c.stroke();}
+    else{for(let i=0;i<3;i++){ellipse(c,p.x-7+i*7,p.y-i%2*3,5,2.5,'#9d9f87');ellipse(c,p.x-8+i*7,p.y-i%2*3-1,3.5,1.8,'#bdc0a5');}}
+  }
   drawMinimap() {
     const c = this.mc, cam = this.camera; c.drawImage(this.miniTerrain, 0, 0);
-    const x = (cam.x - cam.width / 2 / cam.zoom) * .046 + 96, y = (cam.y - cam.height / 2 / cam.zoom) * .046 + 8;
+    const {scale,x:ox,y:oy}=this.mini;
+    if(this.simulation){c.save();c.translate(ox,oy);c.scale(scale,scale);for(let sy=0;sy<this.world.height/12;sy++)for(let sx=0;sx<this.world.width/12;sx++)if(!this.simulation.unlocked.has(`${sx},${sy}`))polygon(c,[project(sx*12,sy*12),project(sx*12+12,sy*12),project(sx*12+12,sy*12+12),project(sx*12,sy*12+12)],'#344c3dbb');c.restore();}
+    const x=(cam.x-cam.width/2/cam.zoom)*scale+ox,y=(cam.y-cam.height/2/cam.zoom)*scale+oy;
     c.strokeStyle = '#284737'; c.lineWidth = 1.2; c.fillStyle = '#f7f9ea22';
-    c.fillRect(x, y, cam.width / cam.zoom * .046, cam.height / cam.zoom * .046);
-    c.strokeRect(x, y, cam.width / cam.zoom * .046, cam.height / cam.zoom * .046);
+    c.fillRect(x, y, cam.width / cam.zoom * scale, cam.height / cam.zoom * scale);
+    c.strokeRect(x, y, cam.width / cam.zoom * scale, cam.height / cam.zoom * scale);
   }
 }

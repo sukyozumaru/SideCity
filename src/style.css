@@ -23,6 +23,22 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .identity h1 { margin: 0; font-size: 21px; font-weight: 650; letter-spacing: -.8px; }
 .world-name { font-size: 14px; margin-left: 20px; color: #bdcbb7; }
 .header-actions { display: flex; gap: 16px; align-items: center; min-height: 44px; background: #253e32; padding: 4px 8px 4px 14px; border-radius: 6px; pointer-events: auto; }
+.world-name { min-height: 32px; padding: 0 4px; border-radius: 4px; }
+.era-hud { position: fixed; z-index: 10; left: 50%; top: max(16px, env(safe-area-inset-top)); transform: translateX(-50%); width: 274px; display: flex; gap: 10px; padding: 8px 12px; text-align: left; color: #e7eedb; background: #253e32; border-radius: 6px; }
+.era-hud>svg { flex: none; width: 30px; height: 36px; color: #bacb91; }
+.era-text { flex: 1; min-width: 0; }
+.era-line { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+.era-line strong { font-weight: 600; }
+.era-line b { font-size: 11px; font-weight: 500; }
+#era-stage,#era-time { display: block; font-size: 11px; color: #bdcbb7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#era-progress { display: block; width: 100%; height: 3px; margin: 4px 0; }
+dialog { max-height: 85svh; overflow-y: auto; overscroll-behavior: contain; }
+#world-form label { display: block; font-size: 13px; margin-bottom: 8px; }
+#world-seed { width: 100%; min-height: 44px; padding: 10px; background: #314d3b; color: #edf1e4; border: 1px solid #597052; border-radius: 4px; font: inherit; }
+#world-form>button,.secondary { min-height: 44px; padding: 8px 12px; border-radius: 4px; }
+#era-milestones { list-style: none; padding: 0; font-size: 13px; line-height: 1.5; }
+#era-milestones li { padding: 8px 0; }
+#unlock-sector { width: 100%; font-size: 12px; line-height: 1.5; margin-top: 16px; }
 .dimensions { color: #bdcbb7; font-size: 13px; font-variant-numeric: tabular-nums; }
 #help { font-size: 16px; border: 1px solid #597052; border-radius: 50%; }
 .settlement-bar { position: fixed; z-index: 10; top: calc(76px + env(safe-area-inset-top)); left: 16px; right: 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; pointer-events: none; }
@@ -59,7 +75,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .sim-controls { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; background: #253e32; border: 1px solid #597052; border-radius: 6px; padding: 0 4px; }
 .sim-controls button { font-size: 12px; min-height: 40px; min-width: 40px; padding: 0 8px; border-radius: 4px; }
 #save-status { font-size: 11px; color: #bdcbb7; padding: 0 6px; }
-.notification { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 110px); padding: 10px 16px; margin: 0; background: #253e32; border: 1px solid #597052; border-radius: 6px; font-size: 12px; line-height: 1.5; pointer-events: none; z-index: 2; }
+.notification { position: absolute; top: 144px; left: 50%; transform: translateX(-50%); max-width: min(440px,calc(100% - 110px)); padding: 10px 16px; margin: 0; background: #253e32; border: 1px solid #597052; border-radius: 6px; font-size: 12px; line-height: 1.5; pointer-events: none; z-index: 2; }
 
 /* Parcel inspection remains an occasional overlay, not a permanent HUD. */
 .parcel { position: absolute; left: 20px; bottom: 65px; width: 272px; padding: 16px 18px; background: #253e32; border: 1px solid #597052; border-radius: 8px; }
@@ -81,6 +97,17 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .current-order>span { line-height: 1.4; }
 .current-order>button { font-size: 12px; min-height: 36px; padding: 0 6px; border-radius: 4px; }
 .current-order progress { grid-column: 1/-1; width: 100%; height: 4px; }
+.needs { display: flex; gap: 14px; padding: 0 20px 10px; font-size: 11px; color: #bdcbb7; }
+.needs label { flex: 1; }
+.needs output { float: right; font-variant-numeric: tabular-nums; }
+.needs progress { display: block; width: 100%; height: 3px; margin-top: 5px; }
+.task-categories { display: flex; gap: 3px; margin: 10px 0 4px; }
+.task-categories button { flex: 1; min-height: 40px; font-size: 12px; border-radius: 4px; padding: 0 4px; }
+.task-categories button[aria-pressed=true] { background: #3a5540; }
+.construction-card { padding: 10px 8px; background: #314a38; border-radius: 5px; margin-top: 10px; }
+.construction-card p { font-size: 12px; line-height: 1.5; margin: 0 0 8px; color: #d1ddc3; }
+.construction-card progress { width: 100%; height: 5px; }
+#cancel-shelter { font-size: 11px; min-height: 40px; text-align: left; padding: 8px 0; }
 .person-tabs { display: flex; padding: 0 14px; gap: 4px; flex: none; }
 .person-tabs button { min-height: 44px; padding: 0 9px; font-size: 13px; flex: 1; border-bottom: 2px solid transparent; }
 .person-tabs button[aria-selected=true] { border-color: #b7cf92; color: #edf1e4; font-weight: 650; }
@@ -134,6 +161,8 @@ noscript { position: absolute; top: 40%; left: 10%; background: white; padding: 
 .has-person .overview { right: 352px; }
 .sim-controls { bottom: 20px; }
 @media (max-width: 1100px) {
+  .era-hud { top: 144px; left: 16px; transform: none; width: 260px; }
+  .place-label { top: 232px; }
   .sim-controls { bottom: 84px; left: 16px; transform: none; }
   .resources { gap: 12px; font-size: 12px; }
   .resources b { font-size: 14px; }
@@ -142,6 +171,14 @@ noscript { position: absolute; top: 40%; left: 10%; background: white; padding: 
   .person-chip small { font-size: 11px; }
 }
 @media (max-width: 700px) and (min-height: 501px) {
+  .era-hud { top: max(10px, env(safe-area-inset-top)); left: auto; right: 64px; width: 142px; padding: 6px 8px; gap: 0; }
+  .era-hud>svg { display: none; }
+  .era-line { font-size: 11px; }
+  .identity .world-name { display: none; }
+  .identity h1 { font-size: 18px; }
+  #era-progress { margin: 3px 0; }
+  #era-stage { max-width: 126px; }
+  .era-line,#era-stage,#era-time { line-height: 12px; }
   .topbar { top: max(10px, env(safe-area-inset-top)); left: 10px; right: 10px; gap: 6px; }
   .identity { padding: 7px 9px; gap: 7px; }
   .identity h1 { font-size: 19px; }
@@ -161,24 +198,29 @@ noscript { position: absolute; top: 40%; left: 10%; background: white; padding: 
   .overview { width: 132px; padding: 5px; bottom: 144px; right: 12px; }
   .overview canvas { width: 120px; height: 70px; }
   .has-person .overview { display: none; }
-  .person-panel { top: auto; left: 10px; right: 10px; bottom: 138px; width: auto; height: 46svh; max-height: 400px; min-height: 220px; }
+  .person-panel { top: auto; left: 10px; right: 10px; bottom: 142px; width: auto; height: 48svh; max-height: 420px; min-height: 250px; }
   .person-top { padding: 10px 14px 2px; }
   .person-top h2 { font-size: 19px; }
   .person-top p { font-size: 12px; margin-top: 2px; }
   .current-order { padding: 0 14px 6px; gap: 4px; }
   .person-tabs { padding: 0 10px; }
   .person-content { padding: 0 12px 8px; }
+  .needs { padding: 0 14px 8px; }
   .person-note { font-size: 11px; padding: 6px 14px; max-height: 54px; overflow: auto; }
   .notification { top: 184px; left: 12px; right: 70px; max-width: none; transform: none; }
   .gesture-hint { bottom: 210px; left: 16px; max-width: 160px; font-size: 11px; line-height: 1.6; }
   .sim-controls { bottom: 78px; left: 10px; }
   .sim-controls button { min-height: 40px; }
   .toolbar { left: 10px; right: 10px; bottom: max(14px, env(safe-area-inset-bottom)); }
-  .tools { width: 100%; justify-content: center; gap: 2px; }
-  .tool { padding: 0 10px; font-size: 12px; gap: 7px; min-height: 44px; }
+  .tools { width: 100%; justify-content: space-between; gap: 2px; }
+  .tool { flex: 1; min-width: 0; padding: 4px 5px; font-size: 11px; gap: 3px; min-height: 48px; flex-direction: column; justify-content: center; }
+  .tool svg { width: 18px; height: 18px; }
   .parcel { left: 12px; bottom: 210px; width: 235px; padding: 14px 16px; }
 }
 @media (max-height: 500px) {
+  .era-hud { top: 8px; left: 50%; width: 235px; transform: translateX(-50%); padding: 5px 9px; }
+  .era-hud>svg { width: 23px; height: 30px; }
+  #era-stage { display: none; }
   .topbar { top: 8px; left: 12px; right: 12px; height: 40px; }
   .identity { padding: 4px 8px; }
   .identity h1 { font-size: 18px; }
@@ -198,6 +240,9 @@ noscript { position: absolute; top: 40%; left: 10%; background: white; padding: 
   .person-top h2 { font-size: 17px; }
   .person-top p { font-size: 11px; }
   .current-order { font-size: 11px; padding: 0 10px 5px; gap: 2px; }
+  .needs { padding: 0 10px 6px; font-size: 11px; }
+  .task-categories { margin: 4px 0; }
+  .task-categories button { min-height: 34px; font-size: 11px; }
   .current-order>button { min-height: 28px; }
   .person-tabs button { font-size: 12px; min-height: 40px; }
   .person-content { padding: 0 8px 8px; }

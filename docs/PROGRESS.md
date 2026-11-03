@@ -1,5 +1,9 @@
 # Avances · 3 de noviembre de 2026
 
+## Versión 0.3 · Reanudación
+
+El usuario reanudó el desarrollo: primera vivienda cooperativa, movimientos e interacciones, agua/energía, mundo triple procedural, minerales, expansión por sectores y barra de era. Implementado en `REFUGE.md` y `WORLD.md`. El conjunto automatizado creció a 33 pruebas y pasa. Las secciones inferiores son el historial previo; `CONTINUAR.md` describe el estado vigente.
+
 ## Versión 0.2 y pausa
 
 Estado vigente: `CONTINUAR.md` en la raíz del proyecto. Se implementaron tres fundadores, seis tareas, habilidades y niveles independientes, especialidad e historial, recursos finitos, fuego, fogón, cocina y guardado con respaldo. El usuario pidió pantalla completa sin franjas claras; el HUD usa islas compactas verde oscuro sobre el mapa. 19 pruebas pasan. Las secciones siguientes conservan el registro de la etapa anterior; la próxima función es el primer refugio. Pausado por petición explícita del usuario, sin añadir funciones nuevas.

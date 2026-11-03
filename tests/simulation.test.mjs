@@ -12,7 +12,7 @@ test('a new civilization has exactly three distinct founders and six independent
 });
 test('routes never enter water or standing trees and reject the far river bank', () => {
   const s = fresh(), p = s.people[0];
-  const route = s.route(p, { x: 24, y: 18 }); assert.ok(route);
+  const route = s.route(p, { x: 21, y: 18 }); assert.ok(route);
   for (const step of route) assert.ok(s.walkable(s.world.get(Math.floor(step.x), Math.floor(step.y))));
   assert.equal(s.route(p, { x: 20, y: 40 }), null);
   assert.equal(findRoute(s.world, p, { x: -1, y: 2 }), null);
