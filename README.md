@@ -47,6 +47,6 @@ Abrir `http://127.0.0.1:4173`. El servidor escucha solo en el equipo local. Para
 - `docs/`: plan, dirección artística, evolución y resultados de verificación.
 - `legacy/`: archivo histórico; no forma parte de la nueva aplicación.
 
-33 pruebas automatizadas de terreno, cámara, tareas, refugio, necesidades, semillas, expansión y guardado. Revisión visual a 1440, 768 y 390 píxeles de ancho; comprobaciones adicionales en horizontal. Safari en un iPhone real sigue pendiente. No hay cuentas, backend, monetización ni despliegue público configurados.
+34 pruebas automatizadas de terreno, cámara, tareas, refugio, necesidades, semillas, expansión y guardado. Revisión visual a 1440, 768 y 390 píxeles de ancho; comprobaciones adicionales en horizontal. Safari en un iPhone real sigue pendiente. No hay cuentas, backend, monetización ni despliegue público configurados.
 
 Reglas y límites: [trabajos](docs/PROFESSIONS.md), [refugio y cuidado](docs/REFUGE.md), [mundo y eras](docs/WORLD.md). Minería/fundición, puentes, hambre, crecimiento de población y eras posteriores siguen en el plan.

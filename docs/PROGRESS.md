@@ -2,7 +2,7 @@
 
 ## Versión 0.3 · Reanudación
 
-El usuario reanudó el desarrollo: primera vivienda cooperativa, movimientos e interacciones, agua/energía, mundo triple procedural, minerales, expansión por sectores y barra de era. Implementado en `REFUGE.md` y `WORLD.md`. El conjunto automatizado creció a 33 pruebas y pasa. Las secciones inferiores son el historial previo; `CONTINUAR.md` describe el estado vigente.
+El usuario reanudó el desarrollo: primera vivienda cooperativa, movimientos e interacciones, agua/energía, mundo triple procedural, minerales, expansión por sectores y barra de era. Implementado en `REFUGE.md` y `WORLD.md`. El conjunto automatizado creció a 34 pruebas y pasa. Las secciones inferiores son el historial previo; `CONTINUAR.md` describe el estado vigente.
 
 ## Versión 0.2 y pausa
 

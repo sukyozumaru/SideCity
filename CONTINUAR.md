@@ -15,7 +15,7 @@ Desarrollo retomado el 3 de noviembre de 2026. Conservar el arte isométrico apr
 
 ## Verificado
 
-33 pruebas pasan con npm test. Recorrido real en Chrome: recolección, construcción de los tres, sueño, bebida, recarga, compra de 144 parcelas y cambio de semilla conservando partidas; sin errores de JavaScript. Revisión visual a 1440, 768 y 390 píxeles: 0 FAIL / 0 WARN. También se revisaron menús móviles y horizontal. Safari/iPhone físico y rendimiento en ese dispositivo siguen pendientes.
+34 pruebas pasan con npm test. Recorrido real en Chrome: recolección, construcción de los tres, sueño, bebida, recarga, compra de 144 parcelas y cambio de semilla conservando partidas; sin errores de JavaScript. Revisión visual a 1440, 768 y 390 píxeles: 0 FAIL / 0 WARN. También se revisaron menús móviles y horizontal. Safari/iPhone físico y rendimiento en ese dispositivo siguen pendientes.
 
 ## Retomar
 

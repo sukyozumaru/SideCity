@@ -215,7 +215,7 @@ export class Simulation {
       if (skill) person.skills[skill].seconds += dt;
       if (job.kind === 'shelter') {
         const contribution = Math.min(dt * this.speed(person, 'shelter'), (1 - this.shelter.progress) * SHELTER_WORK);
-        this.shelter.progress = Math.min(1, this.shelter.progress + contribution / SHELTER_WORK); this.shelter.contributions[person.id] += contribution;
+        this.shelter.progress = Math.min(1, this.shelter.progress + contribution / SHELTER_WORK); this.shelter.contributions[person.id] = Math.min(SHELTER_WORK, this.shelter.contributions[person.id] + contribution);
         if (this.shelter.progress >= 1 - 1e-9) {
           this.shelter.progress = 1; this.shelter.complete = true;
           for (const worker of this.people) { if (this.shelter.contributions[worker.id] >= 1) this.award(worker, 'building', 'Refugio terminado en equipo'); if (worker.job?.kind === 'shelter') this.stop(worker.id); }

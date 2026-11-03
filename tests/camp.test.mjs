@@ -51,3 +51,11 @@ test('targeted resource orders respect the clicked object and shrubs stay obstac
   assert.notDeepEqual(s.person('ana').job.target,{x:17,y:17}); assert.equal(s.assign('ana','move',{x:17,y:17}).ok,false);
   assert.equal(s.assign('ana','logging',{x:20,y:40}).ok,false);
 });
+
+test('a solo builder can finish and save despite floating point accumulation', () => {
+  const s=fresh(); s.resources.wood=20; s.assign('ana','shelter'); advance(s,120);
+  assert.equal(s.shelter.complete,true);
+  const restored=Simulation.restore(s.world,JSON.parse(JSON.stringify(s.snapshot())));
+  assert.equal(restored.shelter.complete,true);
+  assert.equal(restored.person('ana').skills.building.completed,1);
+});
