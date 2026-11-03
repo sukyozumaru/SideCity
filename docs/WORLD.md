@@ -1,4 +1,6 @@
-# Mundo, territorios y eras · 0.3
+# Mundo, territorios y eras · 0.4
+
+Actualización: piedra, carbón, cobre y estaño se extraen con pico de piedra; cantidades finitas y progreso de Minería. Hierro/plata y fundición siguen pendientes. Reglas en INVENTORY.md.
 
 ## Superficie y generación
 
@@ -20,7 +22,7 @@ Tocar el territorio cerrado muestra la ampliación y su coste. El minimapa difer
 
 - Ramas y piedritas son grupos recogibles. Buscar ramas y piedras da experiencia de Recolección y aporta madera o piedra al inventario común.
 - Las vetas contienen piedra, carbón, hierro, cobre, estaño y plata. Se pueden descubrir e inspeccionar; bloquean el paso como objetos grandes.
-- Minería de vetas, fundición y recetas metálicas siguen pendientes de sus tecnologías. El bronce se define como una aleación de cobre y estaño, no como mineral natural del suelo.
+- Las vetas tempranas se extraen con el pico; fundición y recetas metálicas siguen pendientes de sus tecnologías. El bronce se define como una aleación de cobre y estaño, no como mineral natural del suelo.
 - Los detalles pequeños de hierba, flores y rocas decorativas conviven con los grupos recogibles de mayor tamaño.
 
 Todos los recursos visuales son originales por código y conservan el arte del valle. La caché de terreno tiene escala 0,7 para evitar un único lienzo de 24 millones de píxeles al ampliar el mundo. Árboles y personajes se dibujan aparte.

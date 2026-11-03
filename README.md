@@ -4,7 +4,7 @@ Una civilización a escala de barrio: diseña la ciudad y dirige a las personas 
 
 La evolución humana por eras y el sandbox se suman como dirección de desarrollo. La definición unificada y el alcance de cada prototipo están en [docs/SIDECITY.md](docs/SIDECITY.md).
 
-## Versión 0.3 · Primer refugio y mundo ampliable
+## Versión 0.4 · Almacén y primeras herramientas
 
 Reconstrucción limpia autorizada el 3 de noviembre de 2026. La nueva aplicación sustituye el prototipo lateral como fuente de desarrollo. El ZIP anterior ya no es una dependencia.
 
@@ -14,13 +14,19 @@ Reconstrucción limpia autorizada el 3 de noviembre de 2026. La nueva aplicació
 - Inspección de parcelas, cuadrícula opcional, minimapa navegable y vista completa.
 - Ana, Ivo y Nara seleccionables, rutas por tierra y órdenes individuales o para los tres.
 - Talar, recolectar, estudiar, explorar, preparar fogón y cocinar; materiales finitos y primer descubrimiento del fuego.
-- Seis habilidades por persona, niveles 1–20, experiencia, especialidad y registro de trabajos. Menús de Tareas, Habilidades e Historial.
+- Siete habilidades por persona, niveles 1–20, experiencia, especialidad y registro de trabajos. Menús de Tareas, Habilidades e Historial.
 - Guardado de la comunidad, niveles, recursos, órdenes y fogón; copia válida de respaldo. Cámara y cuadrícula recordadas por separado.
 - Mapa a pantalla completa; HUD compacto en verde oscuro, sin las franjas claras superior e inferior. Adaptación panorámica, móvil y horizontal.
 - Primer refugio cooperativo para los tres: reserva única, progreso visual, pausa/reanudación y cancelación con devolución.
 - Beber en la orilla, descansar y dormir en el refugio. Agua/energía, puestos de trabajo distintos y movimiento visual más suave.
 - Mini barra de era con etapa, logros reales, porcentaje, tiempo y año del mundo.
 - Arte original dibujado por código, sin dependencias ni descargas de imágenes o fuentes.
+
+## Almacén y producción
+
+Materiales, alimentos, herramientas y saber tienen existencias y usos separados. Fabrica un hacha o un pico de piedra, asigna minería y usa las comidas para recuperar energía. Mundo y semilla permite descargar y abrir partidas para trasladarlas de navegador. Reglas y límites en [docs/INVENTORY.md](docs/INVENTORY.md).
+
+Acceso alojado privado: [Jugar SideCity](https://sidecity-valle.colominegabito.chatgpt.site). Se requiere la cuenta propietaria de Sites.
 
 ## Ejecutar y comprobar
 
@@ -31,7 +37,7 @@ npm start
 npm test
 ```
 
-Abrir `http://127.0.0.1:4173`. El servidor escucha solo en el equipo local. Para comprobar en un iPhone físico hará falta una URL accesible desde ese dispositivo; esta entrega no se publica automáticamente.
+Abrir `http://127.0.0.1:4173`. El servidor escucha solo en el equipo local. Para comprobar en un iPhone físico hará falta una URL accesible desde ese dispositivo; el alojamiento de Sites ofrece una URL estable con acceso privado del propietario.
 
 ## Estructura
 
@@ -47,6 +53,6 @@ Abrir `http://127.0.0.1:4173`. El servidor escucha solo en el equipo local. Para
 - `docs/`: plan, dirección artística, evolución y resultados de verificación.
 - `legacy/`: archivo histórico; no forma parte de la nueva aplicación.
 
-34 pruebas automatizadas de terreno, cámara, tareas, refugio, necesidades, semillas, expansión y guardado. Revisión visual a 1440, 768 y 390 píxeles de ancho; comprobaciones adicionales en horizontal. Safari en un iPhone real sigue pendiente. No hay cuentas, backend, monetización ni despliegue público configurados.
+42 pruebas automatizadas de terreno, cámara, tareas, refugio, necesidades, semillas, expansión y guardado. Revisión visual a 1440, 768 y 390 píxeles de ancho; comprobaciones adicionales en horizontal. Safari en un iPhone real sigue pendiente. Las partidas se guardan en el navegador; no hay sincronización en la nube ni monetización.
 
-Reglas y límites: [trabajos](docs/PROFESSIONS.md), [refugio y cuidado](docs/REFUGE.md), [mundo y eras](docs/WORLD.md). Minería/fundición, puentes, hambre, crecimiento de población y eras posteriores siguen en el plan.
+Reglas y límites: [trabajos](docs/PROFESSIONS.md), [refugio y cuidado](docs/REFUGE.md), [mundo y eras](docs/WORLD.md). Fundición, puentes, hambre, crecimiento de población y eras posteriores siguen en el plan.

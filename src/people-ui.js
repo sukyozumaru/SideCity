@@ -2,6 +2,7 @@ import { project, unproject } from './core.js';
 import { SKILLS, TASKS, skillProgress, skillLevel, profession, MAX_LEVEL } from './simulation.js';
 import { insideShelter } from './camp.js';
 import { MINERALS } from './terrain.js';
+import { MINERAL_ITEMS } from './items.js';
 const $ = id => document.getElementById(id);
 export class PeopleUI {
   constructor(simulation, renderer, camera, onChange) {
@@ -30,7 +31,7 @@ export class PeopleUI {
       const option = document.createElement('option'); option.value = id; option.textContent = skill.profession; $('specialty').append(option);
     }
     $('specialty').onchange = () => { if (this.selected.length === 1) this.sim.setSpecialty(this.selected[0], $('specialty').value); this.refresh(); this.onChange(); };
-    for (const category of ['work', 'build', 'care']) $('category-' + category).onclick = () => this.showCategory(category);
+    for (const category of ['work', 'build', 'craft', 'care']) $('category-' + category).onclick = () => this.showCategory(category);
     $('cancel-shelter').onclick = () => { if (this.sim.cancelShelter()) this.notify('Materiales recuperados. Puedes empezar la obra de nuevo.'); this.refresh(); this.onChange(); };
     $('camp-status').onclick = () => { this.choose(this.sim.people.map(p => p.id)); this.showTab('tasks'); this.showCategory('build'); const p = project(20, 15); this.camera.x = p.x + 100 / camera.zoom; this.camera.y = p.y + (camera.width < 700 ? 170 / camera.zoom : 0); this.onChange(); };
     for (const tab of ['tasks', 'skills', 'history']) $('tab-' + tab).onclick = () => this.showTab(tab);
@@ -43,7 +44,7 @@ export class PeopleUI {
   }
   showCategory(category) {
     this.category = category;
-    for (const id of ['work', 'build', 'care']) $('category-' + id).setAttribute('aria-pressed', String(id === category));
+    for (const id of ['work', 'build', 'craft', 'care']) $('category-' + id).setAttribute('aria-pressed', String(id === category));
     for (const row of $('task-list').children) row.hidden = row.dataset.category !== category;
     $('construction-card').hidden = category !== 'build';
     $('person-panel').querySelector('.person-content').scrollTop = 0;
@@ -54,6 +55,7 @@ export class PeopleUI {
     this.tab = tab; this.refresh();
   }
   choose(ids) {
+    if(ids.length)document.dispatchEvent(new CustomEvent('sidecity:person-open'));
     this.selected = ids; this.renderer.selectedPeople = ids; this.renderer.selected = null; $('parcel').hidden = true;
     $('person-panel').hidden = !ids.length; $('viewport').classList.toggle('has-person', ids.length > 0);
     $('workspace').classList.toggle('has-person', ids.length > 0);
@@ -91,9 +93,10 @@ export class PeopleUI {
     for (const tree of [...this.sim.world.trees].reverse()) { const p = project(tree.x, tree.y); if (this.sim.standing(Math.floor(tree.x), Math.floor(tree.y)) && Math.abs(point.x-p.x)<37 && point.y>p.y-122 && point.y<p.y+6) { this.order('logging',{x:Math.floor(tree.x),y:Math.floor(tree.y)}); return true; } }
     for (const bush of this.sim.shrubs) { const p = project(bush.x+.5,bush.y+.5); if(Math.abs(point.x-p.x)<23 && point.y>p.y-28 && point.y<p.y+8){this.order('foraging',bush);return true;} }
     if (this.sim.standing(tile.x, tile.y)) { this.order('logging', tile); return true; }
-    const mineral=this.sim.world.mineralAt(tile.x,tile.y);if(mineral){this.notify(`${MINERALS[mineral.kind].name}: ${MINERALS[mineral.kind].detail}`);return true;}
+    const mineral=this.sim.world.mineralAt(tile.x,tile.y);if(mineral&&this.sim.mineralRemaining(mineral)){if(MINERAL_ITEMS[mineral.kind])this.order('mining',tile);else this.notify(`${MINERALS[mineral.kind].name}: requiere herramientas de una tecnología posterior.`);return true;}
     if(this.sim.world.scatter.some(s=>s.x===tile.x&&s.y===tile.y)&&!this.sim.scavenged.has(`${tile.x},${tile.y}`)){this.order('scavenge',tile);return true;}
     if (this.sim.shrubs.some(b => b.x === tile.x && b.y === tile.y)) { this.order('foraging', tile); return true; }
+    if (tile.x===21&&tile.y===16&&this.sim.firepit){this.order('cooking');return true;}
     if (tile.type === 'water') { this.order('drink', tile); return true; }
     this.order('move', tile); return true;
   }

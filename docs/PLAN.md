@@ -12,11 +12,9 @@ El arranque definido por el usuario son tres colonos fundadores desde el primer 
 
 La etapa de terreno y cámara se reconstruyó con autorización del usuario; no depende del ZIP anterior. La aplicación activa está en `index.html` y `src/`. El prototipo lateral se conserva en `legacy/`, fuera de la nueva aplicación.
 
-Implementado: terreno 48 × 48, río, vegetación, proyección, cámara táctil y tres fundadores seleccionables. Órdenes de movimiento, seis tareas, niveles independientes, especialidad e historial. Guardado validado con copia de respaldo. Vista a pantalla completa con HUD oscuro. Ver `PROFESSIONS.md`. Pendiente: Safari en iPhone físico.
+Versión 0.4: mundo procedural de 96 × 72, expansión por sectores de 144, tres fundadores, refugio cooperativo, agua y energía, fogón/cocina, siete habilidades y barra de Orígenes. Almacén separado por categorías; hacha/pico fabricables, extracción finita de piedra/carbón/cobre/estaño y comer. Guardado por semilla, migración y archivos portátiles. Mantener el arte aprobado. Ver INVENTORY.md, REFUGE.md y WORLD.md.
 
-Los habitantes, la recolección, el fogón y la cocina ya forman parte del juego ejecutable. Vivienda, necesidades, eras completas y sandbox siguen diseñados y pendientes de implementación.
-
-Actualización 0.3: el primer refugio y el cuidado de agua/energía ya funcionan, con construcción cooperativa, bebida, descanso y sueño. El mundo se amplió a 96 × 72, con semillas, sectores comprables de 144 parcelas y barra de Orígenes por logros. Ver `REFUGE.md` y `WORLD.md`. Minería, fundición, puentes, hambre, crecimiento y transiciones de era completas siguen pendientes; no repetir la implementación del refugio.
+Siguiente bloque sugerido: colocación de nuevas construcciones y puentes; después fundición, agricultura, crecimiento y transición con contenido de la siguiente era. Hierro/plata, hambre, sandbox completo y Safari/iPhone físico siguen pendientes.
 
 ## Entregas por dependencia
 

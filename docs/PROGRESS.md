@@ -1,3 +1,7 @@
+# Actualización 0.4 · 3 de noviembre de 2026
+
+Almacén por categorías, catálogo único, iconos propios, fabricación atómica de hacha/pico, Minería con vetas finitas y séptima habilidad, comer, guardados descargables/importables y esquema 4. 42 pruebas y recorrido UI en Chrome temporal aislado; sin errores. Mantener las limitaciones descritas en INVENTORY.md. Preparación estática y alojamiento privado con Sites; identidad en .openai/hosting.json.
+
 # Avances · 3 de noviembre de 2026
 
 ## Versión 0.3 · Reanudación

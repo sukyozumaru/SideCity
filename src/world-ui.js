@@ -1,9 +1,24 @@
 import { MINERALS, SECTOR_SIZE, sectorOf } from './terrain.js';
 import { eraState } from './era.js';
+import { readSaveFile, writeSaveFile } from './save-transfer.js';
 const $=id=>document.getElementById(id);
 export class WorldUI {
-  constructor(sim,renderer,people,onStore,onChange){
+  constructor(sim,renderer,people,onStore,onChange,onReplace){
     this.sim=sim;this.renderer=renderer;this.people=people;this.onChange=onChange;this.sector=null;
+    $('export-save').onclick=()=>{
+      try{const json=writeSaveFile(sim),url=URL.createObjectURL(new Blob([json],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`SideCity-${sim.world.seed}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('import-summary').textContent='Partida descargada. Puedes abrir este archivo en otro navegador.';}catch{$('import-summary').textContent='No se pudo preparar el archivo. La partida actual permanece abierta.';}
+    };
+    let imported=null,importRequest=0;
+    $('import-save').onchange=async()=>{
+      const request=++importRequest;imported=null;$('confirm-import').hidden=true;const file=$('import-save').files[0];if(!file)return;
+      try{if(file.size>2_000_000)throw new Error();const candidate=readSaveFile(await file.text());if(request!==importRequest)return;imported=candidate;$('import-summary').textContent=`Semilla ${imported.world.seed} · ${Math.floor(imported.time/60)} min · ${imported.unlocked.size} sectores. Continuar reemplaza la partida de esa semilla en este navegador y conserva su última copia válida.`;$('confirm-import').hidden=false;}
+      catch{if(request===importRequest)$('import-summary').textContent='Archivo no válido. Elige una partida JSON de SideCity de menos de 2 MB.';}
+    };
+    $('confirm-import').onclick=()=>{
+      if(!imported)return;
+      try{if(imported.world.seed!==sim.world.seed&&!onStore())throw new Error();onReplace(imported);const url=new URL(location.href);url.searchParams.set('seed',String(imported.world.seed));location.assign(url.href);}
+      catch{$('import-summary').textContent='No se pudo guardar el archivo. La comunidad actual sigue abierta.';}
+    };
     $('world-open').onclick=()=>{$('world-seed').value=sim.world.seed;$('world-dialog').showModal();};
     $('help-world').onclick=()=>{$('help-dialog').close();$('world-seed').value=sim.world.seed;$('world-dialog').showModal();};
     $('close-world').onclick=()=>$('world-dialog').close();
@@ -28,7 +43,7 @@ export class WorldUI {
       $('parcel').hidden=false;$('parcel-name').textContent='Nuevo territorio';$('parcel-coordinates').textContent=`Sector ${this.sector.x+1} / ${this.sector.y+1}`;$('parcel-state').textContent='144 parcelas';this.refresh();return true;
     }
     const mineral=this.sim.world.mineralAt(tile.x,tile.y);
-    if(mineral){$('parcel-name').textContent=MINERALS[mineral.kind].name;$('parcel-description').textContent=MINERALS[mineral.kind].detail;$('parcel-state').textContent=`Depósito · ${mineral.richness} reservas`;}
+    if(mineral){const remaining=this.sim.mineralRemaining(mineral);$('parcel-name').textContent=MINERALS[mineral.kind].name;$('parcel-description').textContent=['iron','silver'].includes(mineral.kind)?'Requiere herramientas de una tecnología posterior.':'Selecciona un colono y toca esta veta para extraerla con el pico de piedra.';$('parcel-state').textContent=remaining?`Depósito · ${remaining} reservas`:'Depósito agotado';}
     return false;
   }
   refresh(){

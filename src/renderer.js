@@ -135,7 +135,7 @@ export class Renderer {
         const smoothing=1-Math.exp(-elapsed*24);visual.x+=(person.x-visual.x)*smoothing;visual.y+=(person.y-visual.y)*smoothing;this.visualPeople.set(person.id,visual);
         objects.push({kind:'person',item:person,x:visual.x,y:visual.y});
       }
-      for(const mineral of this.world.minerals)if(this.simulation.isUnlocked(mineral.x,mineral.y))objects.push({kind:'mineral',item:mineral,x:mineral.x+.5,y:mineral.y+.5});
+      for(const mineral of this.world.minerals)if(this.simulation.isUnlocked(mineral.x,mineral.y)&&this.simulation.mineralRemaining(mineral)>0)objects.push({kind:'mineral',item:mineral,x:mineral.x+.5,y:mineral.y+.5});
       for(const detail of this.world.scatter)if(this.simulation.isUnlocked(detail.x,detail.y)&&!this.simulation.scavenged.has(`${detail.x},${detail.y}`))objects.push({kind:'scatter',item:detail,x:detail.x+.5,y:detail.y+.5});
       const shelter = this.simulation.shelter;
       objects.push({kind:'shelter',x:shelter.x+shelter.width/2,y:shelter.y+shelter.height-.2});

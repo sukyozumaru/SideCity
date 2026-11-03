@@ -3,6 +3,7 @@ import { Renderer } from './renderer.js';
 import { loadSimulation, saveSimulation } from './persistence.js';
 import { PeopleUI } from './people-ui.js';
 import { WorldUI } from './world-ui.js';
+import { InventoryUI } from './inventory-ui.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('world'), viewport = $('viewport');
@@ -19,11 +20,14 @@ try { storage = localStorage; } catch { storage = { getItem() { return null; }, 
 const loaded = loadSimulation(world, storage), simulation = loaded.simulation;
 renderer.simulation = simulation;
 const peopleUI = new PeopleUI(simulation, renderer, camera, invalidate);
-const worldUI=new WorldUI(simulation,renderer,peopleUI,persist,invalidate);
+let replacingSave=false;
+const worldUI=new WorldUI(simulation,renderer,peopleUI,persist,invalidate,candidate=>{saveSimulation(candidate,storage);replacingSave=true;});
+const inventoryUI=new InventoryUI(simulation,peopleUI,invalidate);
 let paused = false, speed = 1, accumulator = 0, previousTime = 0, lastUI = 0, lastSave = 0, savedRevision = -1;
 if (loaded.blocked) { $('save-status').textContent = 'Guardado protegido'; peopleUI.notify('El guardado no se pudo leer. Conservamos sus datos; esta sesión no los sobrescribirá.'); }
 if (loaded.recovered) peopleUI.notify('Se recuperó la última copia válida de tu comunidad.');
 function persist() {
+  if (replacingSave) return true;
   if (loaded.blocked) return false;
   try { saveSimulation(simulation, storage); $('save-status').textContent = 'Guardado local'; savedRevision = simulation.revision; return true; }
   catch { $('save-status').textContent = 'No se pudo guardar'; return false; }
@@ -48,6 +52,7 @@ function cellAt(x, y) {
 }
 function clearSelection() { renderer.selected = null; $('parcel').hidden = true; invalidate(); }
 function select(x, y) {
+  inventoryUI.close();
   if (peopleUI.tap(x, y)) return;
   const tile = cellAt(x, y);
   if(tile&&!simulation.isUnlocked(tile.x,tile.y)){worldUI.inspect(tile);return;}
@@ -96,7 +101,7 @@ $('zoom-out').onclick = () => zoomBy(.8);
 $('home').onclick = () => { camera.home(); updateCamera(); };
 $('fit').onclick = () => { camera.fit(); updateCamera(); };
 $('grid').onclick = () => { renderer.grid = !renderer.grid; $('grid').setAttribute('aria-pressed', String(renderer.grid)); $('grid').classList.toggle('active', renderer.grid); invalidate(); saveView(); };
-$('explore').onclick = () => { peopleUI.choose([]); clearSelection(); canvas.focus(); };
+$('explore').onclick = () => { inventoryUI.close();peopleUI.choose([]); clearSelection(); canvas.focus(); };
 $('close-parcel').onclick = clearSelection;
 $('minimap').addEventListener('pointerdown', e => {
   const r = $('minimap').getBoundingClientRect();
@@ -133,7 +138,7 @@ function frame(time) {
     while (accumulator >= .1) { simulation.update(.1); accumulator -= .1; }
   }
   if (!document.hidden && time - lastUI >= 200) {
-    peopleUI.refresh(); worldUI.refresh(); lastUI = time;
+    peopleUI.refresh(); worldUI.refresh(); inventoryUI.refresh(); lastUI = time;
     if (simulation.events.length) peopleUI.notify(simulation.events.splice(0).join(' '));
   }
   if (time - lastSave >= 5000 || simulation.revision !== savedRevision && time - lastSave >= 750) { persist(); lastSave = time; }

@@ -6,9 +6,9 @@ import { loadSimulation, saveSimulation, SAVE_KEY } from '../src/persistence.js'
 const advance = (sim, seconds) => { for (let i = 0; i < Math.round(seconds * 10); i++) sim.update(.1); };
 const fresh = () => new Simulation(createWorld());
 const memory = () => { const data = new Map(); return { getItem: k => data.get(k) ?? null, setItem: (k, v) => data.set(k, v) }; };
-test('a new civilization has exactly three distinct founders and six independent skills', () => {
+test('a new civilization has exactly three distinct founders and seven independent skills', () => {
   const s = fresh(); assert.equal(s.people.length, 3); assert.equal(new Set(s.people.map(p => p.id)).size, 3);
-  for (const p of s.people) { assert.ok(s.walkable(s.world.get(Math.floor(p.x), Math.floor(p.y)))); assert.equal(Object.keys(p.skills).length, 6); assert.ok(Object.values(p.skills).every(x => x.xp === 0)); }
+  for (const p of s.people) { assert.ok(s.walkable(s.world.get(Math.floor(p.x), Math.floor(p.y)))); assert.equal(Object.keys(p.skills).length, 7); assert.ok(Object.values(p.skills).every(x => x.xp === 0)); }
 });
 test('routes never enter water or standing trees and reject the far river bank', () => {
   const s = fresh(), p = s.people[0];

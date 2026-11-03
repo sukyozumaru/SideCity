@@ -2,11 +2,11 @@ export const WORLD_WIDTH = 96;
 export const WORLD_HEIGHT = 72;
 export const SECTOR_SIZE = 12;
 export const MINERALS = {
-  stone: { name: 'Piedra', color: '#a5a58e', detail: 'Roca del valle. Material para futuras herramientas y obras.' },
-  coal: { name: 'Carbón', color: '#485449', detail: 'Combustible mineral. Su extracción llegará con herramientas de eras posteriores.' },
+  stone: { name: 'Piedra', color: '#a5a58e', detail: 'Extraíble con un pico de piedra. Material para las primeras herramientas.' },
+  coal: { name: 'Carbón', color: '#485449', detail: 'Extraíble con un pico de piedra. Reserva de combustible para la futura fundición.' },
   iron: { name: 'Hierro', color: '#9b7661', detail: 'Veta de hierro. Requerirá minería y fundición.' },
-  copper: { name: 'Cobre', color: '#9c8764', detail: 'Metal para futuras aleaciones. Cobre y estaño permitirán producir bronce.' },
-  tin: { name: 'Estaño', color: '#a4b2a7', detail: 'Mineral para futuras aleaciones de bronce.' },
+  copper: { name: 'Cobre', color: '#9c8764', detail: 'Mineral extraíble con un pico de piedra. La futura fundición permitirá hacer aleaciones.' },
+  tin: { name: 'Estaño', color: '#a4b2a7', detail: 'Mineral extraíble con un pico de piedra. Materia prima para el futuro bronce.' },
   silver: { name: 'Plata', color: '#c4d0c6', detail: 'Metal de intercambio y artesanía para eras posteriores.' },
 };
 export const initialSectors = () => Array.from({ length: 16 }, (_, i) => `${i % 4},${Math.floor(i / 4)}`);

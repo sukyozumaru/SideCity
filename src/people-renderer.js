@@ -16,7 +16,7 @@ export function drawColonist(c, person, point, options) {
     ellipse(0,0,23,9,'#a79b70');ellipse(3,-4,19,8,person.color);ellipse(-20,-6,7,7,'#d7ae82');ellipse(-23,-9,5,5,person.hair);
     stroke([[-18,-7],[-15,-7]],'#493c30',1);
   }else{
-    const crouching=working&&['foraging','drink'].includes(kind);
+    const crouching=working&&['foraging','scavenge','drink'].includes(kind);
     if(crouching)c.translate(0,8);
     if(seated)c.translate(0,13);
     const stride=moving?Math.sin(phase)*5:0,bob=moving?Math.abs(Math.sin(phase))*1.5:!reducedMotion&&!working?Math.sin(phase*.6)*.45:0;
@@ -33,12 +33,13 @@ export function drawColonist(c, person, point, options) {
     ellipse(0,-40,7.5,9,'#d7ae82');ellipse(-1,-45,8,5.5,person.hair);
     if(person.id!=='ivo')ellipse(-7,-39,3.5,8,person.hair);
     c.fillStyle='#413a2e';c.fillRect(3,-41,1.2,1.5);stroke([[-7,-16],[8,-16]],'#7b6545',2);
-    if(working&&['logging','building','shelter'].includes(kind)){
+    if(working&&['logging','mining','building','shelter','craftAxe','craftPick'].includes(kind)){
       c.save();c.translate(14,-26);c.rotate(-.4+Math.sin(phase*3)*.5);stroke([[0,8],[0,-12]],'#776047',3);c.fillStyle=kind==='logging'?'#8f9787':'#b69667';c.fillRect(-2,-14,11,7);c.restore();
     }
     if(working&&kind==='foraging'){ellipse(15,-29,3,2.5,'#b96956');}
     if(working&&kind==='study'){ellipse(12,-26,5,3.5,'#9da18a');stroke([[8,-25],[14,-30]],'#c0bd9b',1);}
     if(working&&kind==='drink'){ellipse(12,-38,4,2,'#7baeb0');}
+    if(working&&kind==='eat'){ellipse(13,-29,5,3,'#b69c6e');ellipse(12,-32,2,2,'#be7861');}
     if(working&&kind==='cooking'){stroke([[10,-27],[19,-19]],'#796244',2);ellipse(18,-18,6,3,'#8e7957');}
   }
   c.restore();
