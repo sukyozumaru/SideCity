@@ -32,7 +32,7 @@ export const constructionMethods = {
     for(const t of buildingTiles(b)){
       const tile=this.world.get(t.x,t.y);
       if(!tile||!this.isUnlocked(t.x,t.y))return {...b,ok:false,reason:'Abre primero todo el terreno de la obra.'};
-      if(this.occupiedByBuilding(t.x,t.y)||this.firepit&&t.x===21&&t.y===16||t.x===22&&t.y===16)return {...b,ok:false,reason:'Otra obra, acceso o puesto de trabajo ocupa ese lugar.'};
+      if(this.plotAt(t.x,t.y)||this.occupiedByBuilding(t.x,t.y)||this.firepit&&t.x===21&&t.y===16||t.x===22&&t.y===16)return {...b,ok:false,reason:'Otra obra, huerto, acceso o puesto de trabajo ocupa ese lugar.'};
       if(kind==='shelter'&&(!this.walkable(tile)||this.people.some(p=>Math.floor(p.x)===t.x&&Math.floor(p.y)===t.y)))return {...b,ok:false,reason:'Necesitas cuatro parcelas secas, despejadas y sin habitantes encima.'};
       if(kind==='shelter'&&this.world.scatter.some(s=>same(s,t)&&!this.scavenged.has(`${s.x},${s.y}`)))return {...b,ok:false,reason:'Recoge primero las ramas o piedras de ese suelo.'};
     }
@@ -51,7 +51,7 @@ export const constructionMethods = {
     delete b.ok;delete b.reason;Object.assign(b,{reserved:true,complete:false,progress:0,contributions:Object.fromEntries(this.people.map(p=>[p.id,0]))});
     this.emit(`${BUILD_TYPES[kind].name}: materiales reservados. La obra espera constructores.`);return {ok:true,building:b};
   },
-  assignBuilders(id){const b=this.project(id);if(!b||b.complete)return 0;let count=0;for(const p of this.people)if(p.stage!=='child'&&!p.job&&this.assign(p.id,b.kind,{buildingId:id}).ok)count++;return count;},
+  assignBuilders(id){const b=this.project(id);if(!b||b.complete)return 0;let count=0;for(const p of this.people)if(p.stage!=='child'&&(!p.job||p.job.automatic&&['wander','rest'].includes(p.job.kind))&&this.assign(p.id,b.kind,{buildingId:id}).ok)count++;return count;},
   cancelBuilding(id){
     const b=this.project(id);if(!b?.reserved||b.complete)return false;
     for(const p of this.people)if(['shelter','bridge'].includes(p.job?.kind)&&this.jobProject(p.job)===b)this.stop(p.id);

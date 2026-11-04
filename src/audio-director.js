@@ -7,7 +7,7 @@ export function soundFor(person,sim){
  const job=person.job;if(!job)return null;
  if(job.path.length)return{kind:sim.hasBridge(Math.floor(person.x),Math.floor(person.y))?'woodStep':sim.world.get(Math.floor(person.x),Math.floor(person.y))?.type==='bank'?'sand':'grass',interval:.3,moving:true};
  if(person.state!==TASKS[job.kind]?.action)return null;
- const kinds={logging:['chop',.55],mining:[sim.world.mineralAt(job.source?.x,job.source?.y)?.kind==='stone'?'stone':'mineral',.7],foraging:['berries',1.1],scavenge:[sim.world.scatter.find(s=>s.x===job.source?.x&&s.y===job.source?.y)?.kind==='sticks'?'sticks':'pebbles',1.2],building:['build',.7],shelter:['build',.7],bridge:['build',.7],craftAxe:['stone',.85],craftPick:['stone',.85],cooking:['cook',1.1],drink:['drink',1.2],eat:['eat',.85],study:['study',1.4],sleep:['sleep',3.5],rest:['rest',6],social:['social',2.5]};
+ const kinds={preparePlot:['dig',.7],sow:['seeds',1.1],waterPlot:[job.source?.fetch?'drink':'pour',1.2],harvest:['harvest',1],extractSeeds:['seeds',1.1],logging:['chop',.55],mining:[sim.world.mineralAt(job.source?.x,job.source?.y)?.kind==='stone'?'stone':'mineral',.7],foraging:['berries',1.1],scavenge:[sim.world.scatter.find(s=>s.x===job.source?.x&&s.y===job.source?.y)?.kind==='sticks'?'sticks':'pebbles',1.2],building:['build',.7],shelter:['build',.7],bridge:['build',.7],craftAxe:['stone',.85],craftPick:['stone',.85],cooking:['cook',1.1],drink:['drink',1.2],eat:['eat',.85],study:['study',1.4],sleep:['sleep',3.5],rest:['rest',6],social:['social',2.5]};
  const value=kinds[job.kind];return value?{kind:value[0],interval:value[1],moving:false}:null;
 }
 export function spatialSound(camera,x,y){

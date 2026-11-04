@@ -1,11 +1,11 @@
-# Punto de continuación · SideCity 0.7
+# Punto de continuación · SideCity 0.8
 
-Nuevo: densidad de sprites según zoom/DPR y terreno cercano a resolución física; cachés con límite de píxeles. Foley procedural original en foley.js, director independiente en audio-director.js, buses Web Audio en game-audio.js y controles en audio-ui.js. Botón junto a Pausar y preferencias separadas; pausa, silencio y suspensión sin cola al volver. Ver docs/AUDIO-RENDER.md.
+Huertos completos: Cultivar/V, preparación, siembra (1 semilla), buscar agua y volver, humedad/crecimiento y cosecha (4 raíces +2 semillas). Ocho habilidades, semillas iniciales 6, raíces comestibles/cocinables. Primero leer docs/FARM-LIFE.md.
 
-Cámara de ocho orientaciones: giro suave, proyección coherente para selección, obras, rutas, zoom y minimapa. Modelos originales con volumen y colores planos conservan el aspecto ilustrado. Personajes retocados con cambios pequeños. Menús contextuales, controles por función configurables y distribución móvil compacta. Ver docs/CAMERA.md.
+Vida autónoma por persona, órdenes manuales prioritarias con cuidado urgente y reanudación, paseos sin XP, ánimo/compañía, recuerdos, temas de conversación y lenguaje compartido. Círculos de cultivo y encuentro desde tres conversaciones. Hogares y nacimientos siguen siendo decisiones explícitas. Movimiento suavizado y nuevos efectos/foley de agricultura, fogata y río.
 
-Se conservan construcción libre, puentes transitables, recursos, oficios, familias y esquema de guardado 5 con migración de 1–4. Cuatro destinos: Terreno / Construir / Almacén / Comunidad; un inspector visible. npm start, npm test (63 pruebas), npm run build. Sin dependencias externas. GitHub sukyozumaru/SideCity ya es público por petición expresa del usuario.
+Cinco destinos: Mundo / Cultivar / Construir / Almacén / Vida. Un inspector; comunidad por Vida/Vínculos/Hogares y ficha personal por Órdenes/Habilidades/Vida/Historial. Mantener el arte aprobado y la nitidez nativa de la 0.7. npm test: 75 pruebas. Esquema 6 migra 1–5, sin reiniciar partidas. Preferencias de cámara/audio separadas; controles preservados al añadir Cultivar.
 
-Sites usa el project_id de .openai/hosting.json; conservar identidad y audiencia. El usuario rechazó conectar Vercel: no volver a sugerirlo sin una nueva petición. Esta actualización mantiene el enlace existente. No afirmar que su dirección ha cambiado ni alterar el acceso del sitio por hacer público GitHub.
+GitHub sukyozumaru/SideCity es público. Sites usa el project_id existente en .openai/hosting.json; conservar identidad y audiencia. El usuario rechazó Vercel: no volver a sugerirlo sin nueva petición.
 
-Próximos bloques pendientes: fundición/agricultura, demolición/traslado, relaciones más profundas y ciclo vital. No añadirlos sin definir el siguiente bloque con el usuario. Safari/iPhone físico y rendimiento real allí siguen pendientes.
+Pendientes de futuros bloques: fundición y tecnologías/eras siguientes, retirada/traslado de construcciones y huertos, más cultivos, estaciones, conflictos y lenguaje más profundo. No afirmar que están implementados. Verificación física en Safari/iPhone y altavoces/auriculares pendiente.

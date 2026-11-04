@@ -15,7 +15,7 @@ export class PeopleUI {
     }
     const all = document.createElement('button'); all.className = 'group-button'; all.textContent = 'Adultos'; all.onclick = () => this.choose(this.sim.people.filter(p=>p.stage==='adult').map(p => p.id)); $('roster').append(all);
     $('close-person').onclick = () => this.choose([]);
-    $('stop-work').onclick = () => { this.selected.forEach(id => this.sim.stop(id)); this.onChange(); this.refresh(); };
+    $('stop-work').onclick = () => { this.selected.forEach(id => this.sim.stop(id,{manual:true})); this.onChange(); this.refresh(); };
     const none = document.createElement('option'); none.value = ''; none.textContent = 'Según lo que aprende'; $('specialty').append(none);
     for (const [id, task] of Object.entries(TASKS)) {
       const button = document.createElement('button'); button.className = 'task-row'; button.dataset.task = id;
@@ -30,26 +30,26 @@ export class PeopleUI {
       const option = document.createElement('option'); option.value = id; option.textContent = skill.profession; $('specialty').append(option);
     }
     $('specialty').onchange = () => { if (this.selected.length === 1) this.sim.setSpecialty(this.selected[0], $('specialty').value); this.refresh(); this.onChange(); };
-    for (const category of ['work', 'build', 'craft', 'care']) $('category-' + category).onclick = () => this.showCategory(category);
+    for (const category of ['work', 'farm', 'build', 'craft', 'care']) $('category-' + category).onclick = () => this.showCategory(category);
     $('cancel-shelter').onclick = () => { if (this.sim.cancelBuilding((this.sim.activeProject('shelter')||this.sim.shelter).id)) this.notify('Materiales recuperados. Puedes empezar la obra de nuevo.'); this.refresh(); this.onChange(); };
-    for (const tab of ['tasks', 'skills', 'history']) $('tab-' + tab).onclick = () => this.showTab(tab);
-    const tabs = ['tasks', 'skills', 'history'];
+    for (const tab of ['tasks', 'skills', 'life', 'history']) $('tab-' + tab).onclick = () => this.showTab(tab);
+    const tabs = ['tasks', 'skills', 'life', 'history'];
     tabs.forEach((tab, i) => $('tab-' + tab).addEventListener('keydown', e => {
       if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
-      e.preventDefault(); const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : 2)) % 3]; this.showTab(next); $('tab-' + next).focus();
+      e.preventDefault(); const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : 3)) % 4]; this.showTab(next); $('tab-' + next).focus();
     }));
     this.showCategory('work'); this.showTab('tasks'); this.refresh();
   }
   showCategory(category) {
     this.category = category;
-    for (const id of ['work', 'build', 'craft', 'care']) $('category-' + id).setAttribute('aria-pressed', String(id === category));
+    for (const id of ['work', 'farm', 'build', 'craft', 'care']) $('category-' + id).setAttribute('aria-pressed', String(id === category));
     for (const row of $('task-list').children) row.hidden = row.dataset.category !== category;
     $('construction-card').hidden = category !== 'build';
     $('person-panel').querySelector('.person-content').scrollTop = 0;
   }
   showTab(tab) {
     $('person-panel').querySelector('.person-content').scrollTop = 0;
-    for (const id of ['tasks', 'skills', 'history']) { $('view-' + id).hidden = id !== tab; $('tab-' + id).setAttribute('aria-selected', String(id === tab)); $('tab-' + id).tabIndex = id === tab ? 0 : -1; }
+    for (const id of ['tasks', 'skills', 'life', 'history']) { $('view-' + id).hidden = id !== tab; $('tab-' + id).setAttribute('aria-selected', String(id === tab)); $('tab-' + id).tabIndex = id === tab ? 0 : -1; }
     this.tab = tab; this.refresh();
   }
   focusPerson(person) {
@@ -102,6 +102,7 @@ export class PeopleUI {
       button.querySelector('small').textContent = p.stage==='child'?'Infancia':p.state === 'Caminando' ? 'En camino' : p.job ? TASKS[p.job.kind]?.action || 'Libre' : 'Libre';
     }
     for (const resource of Object.keys(this.sim.resources)) if($(resource)) $(resource).textContent = this.sim.resources[resource];
+    $('fresh-food').textContent=this.sim.resources.rawFood+this.sim.resources.vegetables;
     const shelter = this.sim.activeProject('shelter')||this.sim.shelter, builders = this.sim.people.filter(p => p.job?.kind === 'shelter'&&this.sim.jobProject(p.job)===shelter).length;
     $('camp-status-label').textContent='Construir';$('camp-status').title='Colocar refugios y puentes';
     $('construction-state').textContent = shelter.complete ? 'Terminado. Los tres pueden dormir aquí.' : shelter.reserved ? `${Math.floor(shelter.progress * 100)}% · ${builders} constructores · materiales reservados` : 'El primer refugio para los tres. Coste único: 20 madera.';
@@ -116,7 +117,7 @@ export class PeopleUI {
     $('work-progress').value = !group && p.job ? ['shelter','bridge'].includes(p.job.kind) ? this.sim.jobProject(p.job).progress : Math.min(p.job.progress, 1) : 0;
     for (const need of ['water', 'energy']) { const value = group ? Math.min(...this.selected.map(id => this.sim.person(id).needs[need])) : p.needs[need]; $('need-' + need).value = value; $('need-' + need + '-value').textContent = `${Math.round(value)}%`; }
     for (const [id, task] of Object.entries(TASKS)) {
-      const button = $('task-list').querySelector(`[data-task="${id}"]`), reason = !group&&p.stage==='child'&&!['rest','sleep','eat','drink','social'].includes(id)?'Los oficios se abren al crecer.':this.sim.blockReason(id);
+      const button = $('task-list').querySelector(`[data-task="${id}"]`), reason = !group&&p.stage==='child'&&!['wander','rest','sleep','eat','drink','social'].includes(id)?'Los oficios se abren al crecer.':this.sim.blockReason(id);
       button.disabled = !!reason; button.title = reason || task.detail; button.classList.toggle('assigned', !group && p.job?.kind === id);
       if(['shelter','bridge'].includes(id))button.hidden=this.category!==task.category||!this.sim.activeProject(id)?.reserved;
       button.querySelector('small').textContent = reason || task.detail;

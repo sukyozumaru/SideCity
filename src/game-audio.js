@@ -1,6 +1,6 @@
 import {makeFoley} from './foley.js';
 import {AUDIO_KEY,defaultAudio,validateAudio,volumeGain,AudioDirector,spatialSound} from './audio-director.js';
-const LEVELS={grass:.21,sand:.20,woodStep:.24,chop:.38,stone:.3,mineral:.25,berries:.28,pebbles:.3,sticks:.3,cook:.29,build:.3,study:.18,drink:.25,eat:.22,rest:.16,sleep:.22,social:.10};
+const LEVELS={dig:.28,seeds:.22,pour:.3,harvest:.26,grass:.21,sand:.20,woodStep:.24,chop:.38,stone:.3,mineral:.25,berries:.28,pebbles:.3,sticks:.3,cook:.29,build:.3,study:.18,drink:.25,eat:.22,rest:.16,sleep:.22,social:.10};
 export class GameAudio{
  constructor(storage){this.storage=storage;try{this.settings=validateAudio(JSON.parse(storage.getItem(AUDIO_KEY)));}catch{this.settings=defaultAudio();}this.director=new AudioDirector();this.buffers=new Map();this.voices=new Set();this.variants=new Map();this.loops=new Map();this.context=null;this.error=false;this.active=false;this.lastEnvironment=-1;}
  get ready(){return this.context?.state==='running';}

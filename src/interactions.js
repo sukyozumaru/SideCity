@@ -1,4 +1,6 @@
 import {MINERALS} from './terrain.js';
+import {FARM_TASKS,nextFarmTask,plotStage} from './farming.js';
+import {TOPICS,moodName} from './living.js';
 export function pickObject(camera,sim,sx,sy,{people=true}={}){
  const grid=camera.screenToGrid(sx,sy),tile=sim.world.get(Math.floor(grid.x),Math.floor(grid.y));
  const candidates=[],hit=(type,item,x,y,w,h,offset=0)=>{const p=camera.gridToScreen(x,y),z=camera.zoom;if(Math.abs(sx-p.x)<=w*z&&sy>=p.y-h*z&&sy<=p.y+offset*z)candidates.push({type,item,x:Math.floor(x),y:Math.floor(y),depth:camera.projectGrid(x,y).y});};
@@ -12,6 +14,7 @@ export function pickObject(camera,sim,sx,sy,{people=true}={}){
  candidates.sort((a,b)=>b.depth-a.depth);if(candidates.length)return candidates[0];
  if(!tile)return null;
  if(!sim.isUnlocked(tile.x,tile.y))return{type:'locked',x:tile.x,y:tile.y};
+ const plot=sim.plotAt(tile.x,tile.y);if(plot)return{type:'plot',item:plot,x:tile.x,y:tile.y};
  const scatter=sim.world.scatter.find(s=>s.x===tile.x&&s.y===tile.y&&!sim.scavenged.has(`${s.x},${s.y}`));if(scatter)return{type:'scatter',item:scatter,x:tile.x,y:tile.y};
  if(tile.x===21&&tile.y===16)return{type:'fire',x:tile.x,y:tile.y};
  return{type:tile.type==='water'?'water':'ground',x:tile.x,y:tile.y};
@@ -19,7 +22,8 @@ export function pickObject(camera,sim,sx,sy,{people=true}={}){
 const personHeight=p=>p.stage==='child'?22:28;
 export function describeObject(target,sim){
  const t=target,b=t.item;
- if(t.type==='person')return{name:b.name,detail:b.stage==='child'?'Infancia · los oficios se abren al crecer.':`${b.state} · agua ${Math.round(b.needs.water)}% · energía ${Math.round(b.needs.energy)}%`,actions:[{label:'Conversar',task:'social',target:{personId:b.id},detail:'+12 vínculo al completar la conversación.'}]};
+ if(t.type==='plot'){const task=nextFarmTask(b);return{name:'Huerto del valle',detail:`${plotStage(b)} · humedad ${Math.round(b.moisture)}% · crecimiento ${Math.floor(b.growth*100)}%`,actions:[{label:FARM_TASKS[task].action,task,target:{plotId:b.id},detail:FARM_TASKS[task].detail}]};}
+ if(t.type==='person')return{name:b.name,detail:b.stage==='child'?'Infancia · los oficios se abren al crecer.':`${moodName(b)} · ${b.state.toLowerCase()} · compañía ${Math.round(b.company)}%`,actions:Object.entries(TOPICS).map(([topic,label])=>({label,task:'social',target:{personId:b.id,topic},detail:'+12 vínculo y un encuentro que queda en su historia.'}))};
  if(t.type==='tree')return{name:'Árbol del valle',detail:`${sim.timber.get(`${t.x},${t.y}`)||0} talas disponibles · 4 madera por trabajo`,actions:[{label:'Talar este árbol',task:'logging',target:{x:t.x,y:t.y},detail:'La experiencia y la madera llegan al terminar cada trabajo.'}]};
  if(t.type==='bush')return{name:'Arbusto de bayas',detail:`${b.remaining} bayas disponibles`,actions:[{label:'Recolectar aquí',task:'foraging',target:{x:b.x,y:b.y},reason:b.remaining?'':'Este arbusto está agotado.',detail:'Una baya por trabajo completado.'}]};
  if(t.type==='mineral')return{name:MINERALS[b.kind].name,detail:`${sim.mineralRemaining(b)} reservas · ${MINERALS[b.kind].detail}`,actions:[{label:'Extraer esta veta',task:'mining',target:{x:b.x,y:b.y},reason:['iron','silver'].includes(b.kind)?'Requiere herramientas de una tecnología posterior.':'',detail:'Hasta dos materiales por trabajo.'}]};

@@ -12,6 +12,8 @@ import { InputActions,ACTIONS,keyLabel } from './input-actions.js';
 import { VIEW_NAMES } from './projection.js';
 import { GameAudio } from './game-audio.js';
 import { AudioUI } from './audio-ui.js';
+import {FarmUI} from './farm-ui.js';
+import {LivingUI} from './living-ui.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('world'), viewport = $('viewport');
@@ -35,6 +37,8 @@ const inventoryUI=new InventoryUI(simulation,peopleUI,invalidate);
 const buildUI=new BuildUI(simulation,renderer,peopleUI,invalidate);
 const communityUI=new CommunityUI(simulation,peopleUI,invalidate);
 const contextUI=new ContextUI(simulation,renderer,peopleUI,invalidate);
+const farmUI=new FarmUI(simulation,renderer,peopleUI,invalidate);
+const livingUI=new LivingUI(simulation,peopleUI,invalidate);
 const controlsUI=new ControlsUI(applyControls);
 const input=new InputActions(controlsUI.settings,runAction);
 $('open-building-menu').onclick=()=>buildUI.open();
@@ -70,6 +74,7 @@ function cellAt(x, y) {
 }
 function clearSelection() { renderer.selected = null; $('parcel').hidden = true; invalidate(); }
 function select(x,y,forceContext=false){
+ if(farmUI.placing&&!forceContext){farmUI.select(cellAt(x,y));return;}
  if(buildUI.kind&&!forceContext){buildUI.select(cellAt(x,y));return;}
  if(!forceContext&&peopleUI.tap(x,y))return;
  const target=contextUI.pick(x,y,forceContext);if(!target)return;
@@ -81,7 +86,7 @@ function select(x,y,forceContext=false){
 peopleUI.onInteract=(x,y)=>{select(x,y);return true;};
 function applyControls(){input.settings=controlsUI.settings;gestures.dragSpeed=controlsUI.settings.dragSpeed;gestures.zoomSpeed=controlsUI.settings.zoomSpeed;camera.smoothRotation=controlsUI.settings.smoothRotation&&!motionPreference.matches;if(!camera.smoothRotation&&camera.rotating)camera.setView(camera.view,{animate:false});for(const [button,action] of Object.entries({"rotate-left":"rotateLeft","rotate-right":"rotateRight",home:"resetView",fit:"fitView",grid:"grid","zoom-in":"zoomIn","zoom-out":"zoomOut","controls-open":"controls"}))$(button).title=`${ACTIONS[action].name} · ${keyLabel(controlsUI.settings.bindings[action])}`;updateCamera();}
 function runAction(id){
- const actions={rotateLeft:()=>{camera.rotate(-1);updateCamera();},rotateRight:()=>{camera.rotate(1);updateCamera();},resetView:()=>{camera.home();updateCamera();},fitView:()=>{camera.fit();updateCamera();},zoomIn:()=>zoomBy(1.25),zoomOut:()=>zoomBy(.8),grid:()=>{renderer.grid=!renderer.grid;$('grid').setAttribute('aria-pressed',String(renderer.grid));updateCamera();},build:()=>buildUI.open(),stock:()=>inventoryUI.open(),community:()=>communityUI.open(),controls:()=>{input.clear();gestures.cancelAll();controlsUI.open();},pause:()=>$('pause-sim').click(),stop:()=>$('stop-work').click(),rotateBuilding:()=>{if(buildUI.kind)$('rotate-build').click();},interact:()=>{if(buildUI.kind){if(!$('confirm-placement').disabled)$('confirm-placement').click();}else if(contextUI.target){const button=$('context-actions').querySelector('button');if(button&&!button.disabled)button.click();}else select(camera.width/2,camera.height/2,true);}};
+ const actions={rotateLeft:()=>{camera.rotate(-1);updateCamera();},rotateRight:()=>{camera.rotate(1);updateCamera();},resetView:()=>{camera.home();updateCamera();},fitView:()=>{camera.fit();updateCamera();},zoomIn:()=>zoomBy(1.25),zoomOut:()=>zoomBy(.8),grid:()=>{renderer.grid=!renderer.grid;$('grid').setAttribute('aria-pressed',String(renderer.grid));updateCamera();},farm:()=>farmUI.open(),build:()=>buildUI.open(),stock:()=>inventoryUI.open(),community:()=>communityUI.open(),controls:()=>{input.clear();gestures.cancelAll();controlsUI.open();},pause:()=>$('pause-sim').click(),stop:()=>$('stop-work').click(),rotateBuilding:()=>{if(buildUI.kind)$('rotate-build').click();},interact:()=>{if(farmUI.placing){if(!$('farm-confirm').disabled)$('farm-confirm').click();}else if(buildUI.kind){if(!$('confirm-placement').disabled)$('confirm-placement').click();}else if(contextUI.target){const button=$('context-actions').querySelector('button');if(button&&!button.disabled)button.click();}else select(camera.width/2,camera.height/2,true);}};
  if(actions[id])actions[id]();else if(peopleUI.selected.length)peopleUI.order(id);else peopleUI.notify('Selecciona primero a quien hará la tarea.');
 }
 
@@ -118,7 +123,8 @@ canvas.addEventListener('wheel', e => {
   camera.zoomAt(camera.zoom * Math.exp(-delta*.0015*controlsUI.settings.zoomSpeed*(controlsUI.settings.invertWheel?-1:1)), p.x, p.y); updateCamera();
 }, { passive: false });
 function zoomBy(factor) { camera.zoomAt(camera.zoom * factor, camera.width / 2, camera.height / 2); updateCamera(); }
-$('explore').onclick = () => { buildUI.close();communityUI.close();inventoryUI.close();peopleUI.choose([]); clearSelection(); canvas.focus(); };
+function updateNavigation(){const selected=farmUI.placing||!$('farm-panel').hidden?'farm-open':buildUI.kind||!$('build-panel').hidden?'camp-status':!$('stock-panel').hidden?'stock-open':!$('community-panel').hidden?'community-open':'explore';for(const id of['explore','farm-open','camp-status','stock-open','community-open']){$(id).classList.toggle('active',id===selected);$(id).setAttribute('aria-pressed',String(id===selected));}}
+$('explore').onclick = () => { buildUI.close();communityUI.close();inventoryUI.close();contextUI.close(false);farmUI.close();farmUI.cancel();peopleUI.choose([]); clearSelection(); canvas.focus(); };
 $('close-parcel').onclick = clearSelection;
 $('minimap').addEventListener('pointerdown', e => {
   const r = $('minimap').getBoundingClientRect();
@@ -129,7 +135,7 @@ $('minimap').addEventListener('pointerdown', e => {
 $('minimap').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); camera.fit(); updateCamera(); } });
 document.addEventListener('keydown',e=>{
  if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||document.querySelector('dialog[open]')||e.target.closest('input,select,textarea,[contenteditable="true"]'))return;
- if(e.key==='Escape'){e.preventDefault();if(contextUI.target)contextUI.close(true);else{buildUI.close();communityUI.close();inventoryUI.close();peopleUI.choose([]);clearSelection();}input.clear();return;}
+ if(e.key==='Escape'){e.preventDefault();if(contextUI.target)contextUI.close(true);else{buildUI.close();communityUI.close();inventoryUI.close();farmUI.close();farmUI.cancel();peopleUI.choose([]);clearSelection();}input.clear();return;}
  if(e.key==='Enter'&&e.target===canvas){e.preventDefault();runAction('interact');return;}
  if(e.code==='Space'&&e.target.closest('button'))return;
  if(input.press(e.code,e.repeat))e.preventDefault();
@@ -147,7 +153,7 @@ try {
   }
 } catch { /* Invalid view preferences fall back to the meadow. */ }
 updateCamera();
-for(const[id,action]of Object.entries({"rotate-left":"rotateLeft","rotate-right":"rotateRight",home:"resetView",fit:"fitView",grid:"grid","zoom-in":"zoomIn","zoom-out":"zoomOut","camp-status":"build","stock-open":"stock","community-open":"community","controls-open":"controls"}))$(id).onclick=()=>runAction(action);
+for(const[id,action]of Object.entries({"rotate-left":"rotateLeft","rotate-right":"rotateRight",home:"resetView",fit:"fitView",grid:"grid","zoom-in":"zoomIn","zoom-out":"zoomOut","farm-open":"farm","camp-status":"build","stock-open":"stock","community-open":"community","controls-open":"controls"}))$(id).onclick=()=>runAction(action);
 function frame(time) {
   const dt = previousTime ? Math.min((time - previousTime) / 1000, .25) : 0; previousTime = time;
   if(camera.update(dt)){updateCompass();invalidate();}
@@ -157,7 +163,7 @@ function frame(time) {
     while (accumulator >= .1) { simulation.update(.1); accumulator -= .1; }
   }
   if (!document.hidden && time - lastUI >= 200) {
-    peopleUI.refresh(); worldUI.refresh(); inventoryUI.refresh(); buildUI.refresh();communityUI.refresh();contextUI.refresh(); lastUI = time;
+    peopleUI.refresh(); worldUI.refresh(); inventoryUI.refresh(); buildUI.refresh();communityUI.refresh();contextUI.refresh();farmUI.refresh();livingUI.refresh();updateNavigation(); lastUI = time;
     if (simulation.events.length) peopleUI.notify(simulation.events.splice(0).join(' '));
   }
   if (time - lastSave >= 5000 || simulation.revision !== savedRevision && time - lastSave >= 750) { persist(); lastSave = time; }

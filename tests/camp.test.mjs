@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createWorld } from '../src/core.js';
 import { Simulation } from '../src/simulation.js';
 import { insideShelter } from '../src/camp.js';
-const fresh = () => new Simulation(createWorld());
+const fresh = () => new Simulation(createWorld(),{autonomy:false});
 const advance = (s, seconds) => { for(let i=0;i<Math.round(seconds*10);i++) s.update(.1); };
 test('three builders reserve one cost and each contributes from a distinct work station', () => {
   const s=fresh(); s.resources.wood=20;

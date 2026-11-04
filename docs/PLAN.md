@@ -10,14 +10,14 @@ El arranque definido por el usuario son tres colonos fundadores desde el primer 
 
 ## Estado actual
 
-Actualización 0.5: construcción libre, puentes transitables, hogares y repoblación mediante nacimientos. Menús coordinados y esquema 5. Reglas actuales en SETTLEMENT.md. La fundición y agricultura son el siguiente bloque; no repetir los puentes ni la población.
+Actualización 0.8: huertos completos, vida autónoma configurable, bienestar, conversaciones y círculos. Esquema 6 migra los anteriores y conserva construcción, puentes y familias. Reglas vigentes en FARM-LIFE.md. La fundición y las siguientes eras quedan pendientes; no repetir lo ya entregado.
 
 
 La etapa de terreno y cámara se reconstruyó con autorización del usuario; no depende del ZIP anterior. La aplicación activa está en `index.html` y `src/`. El prototipo lateral se conserva en `legacy/`, fuera de la nueva aplicación.
 
 Versión 0.4: mundo procedural de 96 × 72, expansión por sectores de 144, tres fundadores, refugio cooperativo, agua y energía, fogón/cocina, siete habilidades y barra de Orígenes. Almacén separado por categorías; hacha/pico fabricables, extracción finita de piedra/carbón/cobre/estaño y comer. Guardado por semilla, migración y archivos portátiles. Mantener el arte aprobado. Ver INVENTORY.md, REFUGE.md y WORLD.md.
 
-Siguiente bloque sugerido: colocación de nuevas construcciones y puentes; después fundición, agricultura, crecimiento y transición con contenido de la siguiente era. Hierro/plata, hambre, sandbox completo y Safari/iPhone físico siguen pendientes.
+Estado 0.8: construcción libre y puentes, familias y nuevas generaciones, ocho cámaras, nitidez, foley y primeros huertos completos. Iniciativa propia configurable, ánimo/compañía, conversaciones, lenguaje y círculos. Ver FARM-LIFE.md. Siguientes bloques: fundición, más cultivos, retirada/traslado y transición con contenido de la siguiente era. Hierro/plata, hambre, sandbox completo y Safari/iPhone físico siguen pendientes.
 
 ## Entregas por dependencia
 
@@ -50,7 +50,7 @@ Conservar JavaScript, Canvas 2D y módulos nativos. La etapa actual no requiere 
 
 La altura visual de un objeto nunca determina su huella. Guardar identificadores y datos lógicos, no referencias al DOM o partículas.
 
-## Primer bloque de habitantes
+## Archivo de prioridades iniciales de habitantes
 
 1. Dibujar tres colonos con identidades distintas en el terreno aprobado, con escala y profundidad coherentes.
 2. Hacerlos aparecer juntos desde el inicio, sin edificios ni sociedad precargados.

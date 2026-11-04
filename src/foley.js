@@ -1,6 +1,6 @@
 // Original procedural foley: filtered noise, short material resonances and air/liquid envelopes.
 // No remote samples, speech recordings or musical notification tones.
-export const SOUND_KINDS=['grass','sand','woodStep','chop','stone','mineral','berries','pebbles','sticks','cook','build','study','drink','eat','rest','sleep','social','river','fire'];
+export const SOUND_KINDS=['grass','sand','woodStep','chop','stone','mineral','berries','pebbles','sticks','cook','build','study','drink','eat','rest','sleep','social','river','fire','dig','seeds','pour','harvest'];
 export const LOOP_KINDS=new Set(['river','fire']);
 function random(seed){let n=seed>>>0;return()=>{n=(Math.imul(n,1664525)+1013904223)>>>0;return n/4294967296;};}
 export function makeFoley(kind,variant=0,sampleRate=24000){
@@ -13,6 +13,10 @@ export function makeFoley(kind,variant=0,sampleRate=24000){
     const high=n-air,hit=Math.exp(-t*30),dry=Math.exp(-t*15),pulse=(f,d)=>Math.sin(2*Math.PI*f*t*tune)*Math.exp(-t*d);
     let v=0;
     switch(kind){
+      case'dig':v=low*dry*.9+high*hit*.35+pulse(160,36)*.25;break;
+      case'seeds':v=high*Math.sin(t*39)**2*Math.exp(-t*14)*.3+low*dry*.2;break;
+      case'pour':v=(low*.4+slow*.8)*Math.sin(Math.PI*t/duration)*(1+.25*Math.sin(t*95));break;
+      case'harvest':v=low*dry*.6+high*Math.exp(-t*25)*.35+pulse(120,45)*.12;break;
       case'grass':v=low*dry*.8+high*dry*(.5+.5*Math.sin(t*160))+pulse(105,38)*.25;break;
       case'sand':v=low*dry+high*Math.exp(-t*10)*.45;break;
       case'woodStep':v=low*hit*.5+pulse(145,28)*.36+pulse(340,42)*.13;break;

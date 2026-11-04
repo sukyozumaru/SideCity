@@ -1,5 +1,5 @@
 import{test}from'node:test';import assert from'node:assert/strict';import{Simulation}from'../src/simulation.js';import{createWorld}from'../src/core.js';import{CHILD_SECONDS,BIRTH_SECONDS}from'../src/community.js';
-const fresh=()=>{const s=new Simulation(createWorld());s.resources.wood=250;s.resources.stone=30;s.resources.meals=15;return s;};
+const fresh=()=>{const s=new Simulation(createWorld(),{autonomy:false});s.resources.wood=250;s.resources.stone=30;s.resources.meals=15;return s;};
 const advance=(s,n)=>{for(let i=0;i<n*10;i++)s.update(.1);};
 const homeSpot=s=>s.world.tiles.filter(t=>t.x>=14&&t.x<=28&&t.y>=9&&t.y<=21).sort((a,b)=>Math.hypot(a.x-20,a.y-15)-Math.hypot(b.x-20,b.y-15)).find(t=>s.previewBuilding('shelter',t.x,t.y).ok);
 const buildHome=s=>{const t=homeSpot(s);assert.ok(t);const r=s.placeBuilding('shelter',t.x,t.y);assert.ok(r.ok);s.assignBuilders(r.building.id);advance(s,80);assert.equal(r.building.complete,true);return r.building;};

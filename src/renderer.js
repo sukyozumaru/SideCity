@@ -6,6 +6,8 @@ import { groundMatrix, projectView } from './projection.js';
 import { drawMesh, treeMesh, rockMesh, bushMesh, ellipsoid, drawLine3D } from './mesh-art.js';
 import { SECTOR_SIZE, MINERALS } from './terrain.js';
 import { RasterCache,rasterDensity,matrixStretch } from './raster-cache.js';
+import {drawFarm,drawFarmPreview} from './farm-renderer.js';
+import {drawCampfire,drawRiverFX} from './environment-fx.js';
 
 const grass = ['#91b56e', '#94b872', '#96b974', '#92b570', '#98ba75', '#90b36d'];
 function polygon(ctx, points, fill, stroke) {
@@ -108,6 +110,7 @@ export class Renderer {
       for(let y=0;y<=this.world.height;y++){const a=project(0,y),b=project(this.world.width,y);c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);}
       c.strokeStyle = '#365a3430'; c.lineWidth = .75 / z; c.stroke();
     }
+    drawRiverFX(c,this.world,camera,(this.simulation?.time||0)*1000,this.reducedMotion,this.simulation?.people||[]);
     if(this.simulation)for(const b of this.simulation.buildings)if(b.kind==='bridge')drawBridge(c,b,project);
     if(this.simulation)for(let y=0;y<this.world.height/SECTOR_SIZE;y++)for(let x=0;x<this.world.width/SECTOR_SIZE;x++){
       if(this.simulation.unlocked.has(`${x},${y}`))continue;
@@ -125,9 +128,10 @@ export class Renderer {
       for (const person of this.simulation.people) {
         let visual = this.visualPeople.get(person.id);
         if (!visual || Math.hypot(visual.x-person.x,visual.y-person.y)>4) visual={x:person.x,y:person.y};
-        const smoothing=1-Math.exp(-elapsed*24);visual.x+=(person.x-visual.x)*smoothing;visual.y+=(person.y-visual.y)*smoothing;this.visualPeople.set(person.id,visual);
+        const smoothing=1-Math.exp(-elapsed*24);visual.x+=(person.x-visual.x)*smoothing;visual.y+=(person.y-visual.y)*smoothing;const wanted=Math.atan2(person.direction.y,person.direction.x);visual.angle??=wanted;visual.angle+=Math.atan2(Math.sin(wanted-visual.angle),Math.cos(wanted-visual.angle))*(1-Math.exp(-elapsed*16));this.visualPeople.set(person.id,visual);
         objects.push({kind:'person',item:person,x:visual.x,y:visual.y});
       }
+      for(const plot of this.simulation.plots)objects.push({kind:'plot',item:plot,x:plot.x+.5,y:plot.y+.5});
       for(const mineral of this.world.minerals)if(this.simulation.isUnlocked(mineral.x,mineral.y)&&this.simulation.mineralRemaining(mineral)>0)objects.push({kind:'mineral',item:mineral,x:mineral.x+.5,y:mineral.y+.5});
       for(const detail of this.world.scatter)if(this.simulation.isUnlocked(detail.x,detail.y)&&!this.simulation.scavenged.has(`${detail.x},${detail.y}`))objects.push({kind:'scatter',item:detail,x:detail.x+.5,y:detail.y+.5});
       for(const shelter of this.simulation.buildings)if(shelter.kind==='shelter'&&shelter.reserved)objects.push({kind:'shelter',item:shelter,x:shelter.x+shelter.width/2,y:shelter.y+shelter.height/2});
@@ -139,6 +143,7 @@ export class Renderer {
     for (const object of visible) {
       c.globalAlpha = 1;
       const p = object.point;
+      if(object.kind==='plot'){c.save();c.translate(p.x,p.y);drawFarm(c,object.item,project,this.simulation.time*1000,this.reducedMotion);c.restore();continue;}
       if(object.kind==='mineral'){this.drawMineral(object.item,p);continue;}
       if(object.kind==='scatter'){this.drawScatter(object.item,p);continue;}
       if (object.kind === 'shelter') { drawShelter(c,object.item,false,project); continue; }
@@ -155,19 +160,10 @@ export class Renderer {
       c.save();c.translate(p.x,p.y);if(chopping&&!this.reducedMotion)c.rotate(Math.sin(this.simulation.time*9)*.018);c.drawImage(this.treeSprite(tree.variant),-80,-170,160,190);c.restore();
     }
     c.globalAlpha = 1;
-    drawPlacement(c,this.placement,z,project);
+    drawPlacement(c,this.placement,z,project);drawFarmPreview(c,this.farmPreview,project,z);
     if (this.selected) {
       const p = project(this.selected.x + .5, this.selected.y + .5);
       ellipse(c, p.x, p.y, 3.4 / z, 2 / z, '#315d49');
-    }
-    // A few moving glints give the river life, without changing the terrain or simulation.
-    if (!this.reducedMotion && z > .25) {
-      c.lineWidth = 1 / z; c.strokeStyle = '#e7f3d64d';
-      for (let i = 4; i < 48; i += 7) {
-        const y = 24 + Math.sin(i * .14 + .4) * 5 + Math.sin(i * .31) * 1.1;
-        const p = project(i + ((this.simulation?.time*1000||0) / 18000 % 1), y);
-        c.beginPath(); c.moveTo(p.x - 6, p.y); c.lineTo(p.x + 9, p.y); c.stroke();
-      }
     }
     if(this.simulation) for(const effect of this.simulation.feedback){
       const age=this.simulation.time-effect.time,p=project(effect.x,effect.y);
@@ -181,7 +177,8 @@ export class Renderer {
     if(this.simulation.hasBridge(Math.floor(person.x),Math.floor(person.y)))point.y-=9;
     const overlaps=this.simulation.people.filter(other=>Math.hypot(other.x-person.x,other.y-person.y)<.35).sort((a,b)=>a.id.localeCompare(b.id));if(overlaps.length>1)point.x+=(overlaps.indexOf(person)-(overlaps.length-1)/2)*8;
     const neighbours=this.simulation.people.filter(other=>Math.hypot(other.x-person.x,other.y-person.y)<1.25).sort((a,b)=>a.id.localeCompare(b.id));
-    drawColonist(this.ctx, person, point, { selected: this.selectedPeople?.includes(person.id), zoom: this.camera.zoom, time: this.simulation.time * 1000, reducedMotion: this.reducedMotion, socialTarget,view:this.camera.orbit,labelLift:neighbours.length>1?neighbours.indexOf(person)*16/this.camera.zoom:0, progress: ['shelter','bridge'].includes(person.job?.kind) ? this.simulation.jobProject(person.job).progress : person.job?.progress || 0 });
+    const angle=this.visualPeople.get(person.id)?.angle??Math.atan2(person.direction.y,person.direction.x),speechPeople=this.simulation.people.filter(p=>this.simulation.speechFor(p)).slice(0,2);
+    drawColonist(this.ctx, {...person,direction:{x:Math.cos(angle),y:Math.sin(angle)}}, point, { selected: this.selectedPeople?.includes(person.id), zoom: this.camera.zoom, time: this.simulation.time * 1000, reducedMotion: this.reducedMotion, socialTarget,speech:speechPeople.includes(person)?this.simulation.speechFor(person):'',view:this.camera.orbit,labelLift:neighbours.length>1?neighbours.indexOf(person)*16/this.camera.zoom:0, progress: ['shelter','bridge'].includes(person.job?.kind) ? this.simulation.jobProject(person.job).progress : person.job?.progress || 0 });
     if (this.selectedPeople?.includes(person.id) && person.job?.path.length) {
       const c = this.ctx; c.save(); c.lineWidth = 1.5 / this.camera.zoom; c.strokeStyle = '#f7f8dfaa'; c.setLineDash([4 / this.camera.zoom, 5 / this.camera.zoom]); c.beginPath(); c.moveTo(p.x, p.y);
       for (const step of person.job.path) { const s = project(step.x, step.y); c.lineTo(s.x, s.y); }
@@ -201,10 +198,7 @@ export class Renderer {
     this.objectCache.set(id,sprite);return sprite;
   }
   drawBush(bush,p){this.ctx.drawImage(this.objectSprite('bush:'+Math.min(5,bush.remaining),(c,project)=>drawMesh(c,bushMesh(bush.remaining),project)),p.x-48,p.y-78,96,100);}
-  drawFire(p,time){const c=this.ctx,project=this.camera.projectGrid.bind(this.camera),faces=[];c.save();c.translate(p.x,p.y);
-    for(let i=0;i<7;i++)faces.push(...ellipsoid(Math.cos(i/7*Math.PI*2)*.3,Math.sin(i/7*Math.PI*2)*.3,2,.10,.08,4,i%2?'#a4a58a':'#8f977e',6,3));
-    drawMesh(c,faces,project);if(this.simulation.firepit){drawLine3D(c,[-.17,-.12,3],[.17,.12,3],project,'#7b5e3e',5);drawLine3D(c,[-.12,.17,3],[.12,-.17,3],project,'#7b5e3e',5);const sway=this.reducedMotion?0:Math.sin(time/180)*.025;drawMesh(c,[{points:[{x:-.14,y:0,z:4},{x:sway,y:0,z:28},{x:.14,y:0,z:4}],color:'#d79c4c'},{points:[{x:0,y:-.13,z:4},{x:0,y:sway,z:23},{x:0,y:.13,z:4}],color:'#eed38a'}],project);}c.restore();
-  }
+  drawFire(p,time){const c=this.ctx;c.save();c.translate(p.x,p.y);drawCampfire(c,this.camera.projectGrid.bind(this.camera),this.simulation.firepit,time,this.reducedMotion);c.restore();}
   drawMineral(mineral,p){this.ctx.drawImage(this.objectSprite('rock:'+mineral.kind,(c,project)=>drawMesh(c,rockMesh(mineral.kind,MINERALS[mineral.kind].color),project)),p.x-48,p.y-78,96,100);}
   drawScatter(item,p){
     const sprite=this.objectSprite('scatter:'+item.kind,(c,project)=>{

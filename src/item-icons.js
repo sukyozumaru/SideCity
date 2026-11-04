@@ -1,5 +1,7 @@
 // Original small line drawings: the same materials as the isometric world.
 const shapes = {
+  seeds:'<g fill="#c5b27c"><ellipse cx="11" cy="12" rx="4" ry="6" transform="rotate(-25 11 12)"/><ellipse cx="23" cy="18" rx="4" ry="6" transform="rotate(25 23 18)"/><ellipse cx="12" cy="26" rx="4" ry="5"/></g>',
+  roots:'<path fill="#b58a52" d="m10 15 11 2-6 14z"/><path stroke="#91ad68" d="M16 17V4m0 8-7-6m7 7 9-7"/>',
   wood: '<path fill="#94714d" d="m6 21 17-11 5 7-17 11z"/><path d="m10 23 13-8M6 21l5 7M22 10l6 7"/><ellipse cx="9" cy="25" rx="3" ry="4" transform="rotate(-35 9 25)"/>',
   stone: '<path fill="#a5a58e" d="m5 24 2-12 10-6 11 10-4 11-13 1z"/><path d="m7 12 12 5 9-1M19 17l-2 11"/>',
   coal: '<path fill="#657064" d="m5 24 2-12 10-6 11 10-4 11-13 1z"/><path d="m7 12 12 5 9-1M19 17l-2 11"/>',
