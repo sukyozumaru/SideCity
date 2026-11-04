@@ -10,6 +10,8 @@ import { ContextUI } from './context-ui.js';
 import { ControlsUI } from './controls-ui.js';
 import { InputActions,ACTIONS,keyLabel } from './input-actions.js';
 import { VIEW_NAMES } from './projection.js';
+import { GameAudio } from './game-audio.js';
+import { AudioUI } from './audio-ui.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('world'), viewport = $('viewport');
@@ -25,6 +27,7 @@ let storage;
 try { storage = localStorage; } catch { storage = { getItem() { return null; }, setItem() { throw new Error('Almacenamiento no disponible.'); } }; }
 const loaded = loadSimulation(world, storage), simulation = loaded.simulation;
 renderer.simulation = simulation;
+const audio=new GameAudio(storage);new AudioUI(audio);
 const peopleUI = new PeopleUI(simulation, renderer, camera, () => { invalidate();saveView(); });
 let replacingSave=false;
 const worldUI=new WorldUI(simulation,renderer,peopleUI,persist,invalidate,candidate=>{saveSimulation(candidate,storage);replacingSave=true;});
@@ -159,9 +162,11 @@ function frame(time) {
   }
   if (time - lastSave >= 5000 || simulation.revision !== savedRevision && time - lastSave >= 750) { persist(); lastSave = time; }
   const animated = simulation.people.some(p => p.job) && !paused;
+  audio.update(simulation,camera,{active:!document.hidden&&!paused&&!document.querySelector('dialog[open]')});
   if (!document.hidden && (dirty || animated || !renderer.reducedMotion && time - lastDraw >= 65)) { renderer.draw(time); dirty = false; lastDraw = time; }
   requestAnimationFrame(frame);
 }
-document.addEventListener('visibilitychange', () => { input.clear();gestures.cancelAll(); canvas.classList.remove('dragging'); previousTime = 0; accumulator = 0; if (document.hidden) persist(); invalidate(); });
+document.addEventListener('visibilitychange', () => { input.clear();gestures.cancelAll(); canvas.classList.remove('dragging'); previousTime = 0; accumulator = 0; if (document.hidden){persist();audio.hide();}else audio.resume(); invalidate(); });
 window.addEventListener('pagehide', persist);
+window.addEventListener('pagehide',()=>audio.dispose());
 requestAnimationFrame(frame);

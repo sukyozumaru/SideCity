@@ -4,7 +4,7 @@ Una civilización a escala de barrio: diseña la ciudad y dirige a las personas 
 
 La evolución humana por eras y el sandbox se suman como dirección de desarrollo. La definición unificada y el alcance de cada prototipo están en [docs/SIDECITY.md](docs/SIDECITY.md).
 
-## Versión 0.6 · Ocho vistas, volumen y controles
+## Versión 0.7 · Zoom nítido y sonido del valle
 
 Reconstrucción limpia autorizada el 3 de noviembre de 2026. La nueva aplicación sustituye el prototipo lateral como fuente de desarrollo. El ZIP anterior ya no es una dependencia.
 
@@ -21,6 +21,10 @@ Reconstrucción limpia autorizada el 3 de noviembre de 2026. La nueva aplicació
 - Beber en la orilla, descansar y dormir en el refugio. Agua/energía, puestos de trabajo distintos y movimiento visual más suave.
 - Mini barra de era con etapa, logros reales, porcentaje, tiempo y año del mundo.
 - Arte original dibujado por código, sin dependencias ni descargas de imágenes o fuentes.
+
+## Nitidez y sonido
+
+Los sprites se redibujan según el zoom y la densidad de pantalla; el terreno cercano se dibuja a resolución nativa. Foley procedural original para pasos, tala, minería, recolección, construcción, cocina, estudio y cuidado, más río y fogata suaves. Botón de silencio junto a Pausar; volúmenes y prueba de sonido en Controles. Se inicia con el primer toque, sigue la cámara y se pausa con el juego o al ocultar la pestaña. Detalles y verificación en [docs/AUDIO-RENDER.md](docs/AUDIO-RENDER.md).
 
 ## Cámara e interacción
 
@@ -61,6 +65,6 @@ Abrir `http://127.0.0.1:4173`. El servidor escucha solo en el equipo local. Para
 - `docs/`: plan, dirección artística, evolución y resultados de verificación.
 - `legacy/`: archivo histórico; no forma parte de la nueva aplicación.
 
-57 pruebas automatizadas de terreno, cámara, tareas, refugio, necesidades, semillas, expansión y guardado. Revisión visual a 1440, 768 y 390 píxeles de ancho; comprobaciones adicionales en horizontal. Safari en un iPhone real sigue pendiente. Las partidas se guardan en el navegador; no hay sincronización en la nube ni monetización.
+63 pruebas automatizadas de terreno, cámara, tareas, refugio, necesidades, semillas, expansión y guardado. Revisión visual a 1440, 768 y 390 píxeles de ancho; comprobaciones adicionales en horizontal. Safari en un iPhone real sigue pendiente. Las partidas se guardan en el navegador; no hay sincronización en la nube ni monetización.
 
 Reglas y límites: [trabajos](docs/PROFESSIONS.md), [refugio y cuidado](docs/REFUGE.md), [mundo y eras](docs/WORLD.md). Fundición, hambre y eras posteriores siguen en el plan. Construcción libre, puentes, relaciones y nuevas generaciones ya están implementados: ver docs/SETTLEMENT.md.

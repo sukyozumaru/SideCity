@@ -516,3 +516,13 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline: 2px sol
  .person-content { overflow:visible; }
  .person-note { padding-block:8px; }
 }
+
+/* Sound stays beside simulation playback; preferences belong to Controls. */
+#audio-toggle { display:grid;place-items:center;min-width:44px;min-height:44px;padding:0; }
+#audio-toggle svg { width:19px;height:19px; }
+.audio-cross { display:none; }
+.is-muted .audio-wave { display:none; }
+.is-muted .audio-cross { display:block; }
+.audio-options { border-top:1px solid #425740;margin-top:24px;padding-top:2px; }
+#audio-preview { border:1px solid #597052;margin-top:12px; }
+@media(max-width:700px) and (min-height:501px){.sim-controls { max-width:calc(100% - 20px); } #save-status { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }}

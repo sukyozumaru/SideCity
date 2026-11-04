@@ -5,6 +5,7 @@ import { drawBridge, drawPlacement } from './construction-renderer.js';
 import { groundMatrix, projectView } from './projection.js';
 import { drawMesh, treeMesh, rockMesh, bushMesh, ellipsoid, drawLine3D } from './mesh-art.js';
 import { SECTOR_SIZE, MINERALS } from './terrain.js';
+import { RasterCache,rasterDensity,matrixStretch } from './raster-cache.js';
 
 const grass = ['#91b56e', '#94b872', '#96b974', '#92b570', '#98ba75', '#90b36d'];
 function polygon(ctx, points, fill, stroke) {
@@ -22,7 +23,7 @@ export class Renderer {
   constructor(canvas, minimap, world, camera) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.map = minimap; this.mc = minimap.getContext('2d');
     this.world = world; this.camera = camera; this.dpr = 1; this.grid = false; this.selected = null; this.hover = null;
-    this.treeMeshes=Array.from({length:6},(_,i)=>treeMesh(i));this.treeCache=new Map();this.objectCache=new Map();
+    this.treeMeshes=Array.from({length:6},(_,i)=>treeMesh(i));this.treeCache=new RasterCache(6000000);this.objectCache=new RasterCache(2000000);this.groundView=document.createElement('canvas');
     this.cache = document.createElement('canvas'); this.cacheScale = .7;
     this.cacheWidth = (world.width + world.height) * TILE_W / 2 + 100;
     this.cacheHeight = (world.width + world.height) * TILE_H / 2 + 180;
@@ -31,7 +32,10 @@ export class Renderer {
   }
   buildTerrain() {
     const c = this.cache.getContext('2d'); c.scale(this.cacheScale,this.cacheScale); c.translate(this.origin.x, this.origin.y); c.lineJoin = 'round';
-    for (const tile of this.world.tiles) {
+    this.paintTerrain(c,this.world.tiles);this.buildMiniTerrain();
+  }
+  paintTerrain(c,tiles){
+    for (const tile of tiles) {
       const { x, y, type, variation: v } = tile;
       const color = type === 'water' ? ['#70afb1', '#73b3b4', '#76b5b5'][Math.floor(v * 3)] : type === 'bank' ? ['#c0bd89', '#b4bb80', '#bdc18b'][Math.floor(v * 3)] : grass[Math.floor(v * grass.length)];
       c.lineWidth = .7; diamond(c, x, y, color, color);
@@ -61,7 +65,20 @@ export class Renderer {
         for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(p.x + i * 3, p.y); c.lineTo(p.x + i * 4 - 2, p.y - 7 - i % 3 * 3); c.stroke(); }
       }
     }
-    this.buildMiniTerrain();
+  }
+  drawTerrain(c,matrix){
+    const cam=this.camera,z=cam.zoom,dpr=this.dpr;
+    if(z*dpr*matrixStretch(matrix)<=this.cacheScale){c.save();c.transform(matrix.a,matrix.b,matrix.c,matrix.d,0,0);c.drawImage(this.cache,-this.origin.x,-this.origin.y,this.cacheWidth,this.cacheHeight);c.restore();return;}
+    const key=[cam.x,cam.y,z,cam.orbit,cam.width,cam.height,dpr].join('/');
+    if(this.groundKey!==key){
+      const layer=this.groundView;if(layer.width!==this.canvas.width||layer.height!==this.canvas.height){layer.width=this.canvas.width;layer.height=this.canvas.height;}
+      const g=layer.getContext('2d'),focus=cam.viewFocus;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,layer.width,layer.height);g.setTransform(dpr,0,0,dpr,0,0);g.translate(cam.width/2,cam.height/2);g.scale(z,z);g.translate(-focus.x,-focus.y);g.transform(matrix.a,matrix.b,matrix.c,matrix.d,0,0);g.lineJoin='round';
+      const points=[[-90,-90],[cam.width+90,-90],[cam.width+90,cam.height+90],[-90,cam.height+90]].map(([x,y])=>cam.screenToGrid(x,y));
+      const left=Math.max(0,Math.floor(Math.min(...points.map(p=>p.x)))-1),right=Math.min(this.world.width,Math.ceil(Math.max(...points.map(p=>p.x)))+1),top=Math.max(0,Math.floor(Math.min(...points.map(p=>p.y)))-1),bottom=Math.min(this.world.height,Math.ceil(Math.max(...points.map(p=>p.y)))+1),tiles=[];
+      for(let y=top;y<bottom;y++)for(let x=left;x<right;x++){const p=cam.gridToScreen(x+.5,y+.5);if(p.x>=-90&&p.x<=cam.width+90&&p.y>=-90&&p.y<=cam.height+90)tiles.push(this.world.get(x,y));}
+      this.paintTerrain(g,tiles);this.groundKey=key;
+    }
+    c.save();c.setTransform(1,0,0,1,0,0);c.drawImage(this.groundView,0,0);c.restore();
   }
   buildMiniTerrain() {
     const m = document.createElement('canvas'); m.width = 192; m.height = 112;
@@ -72,18 +89,19 @@ export class Renderer {
     this.miniTerrain = m;
   }
   resize(width, height) {
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.dpr = window.devicePixelRatio || 1;
     this.canvas.width = Math.round(width * this.dpr); this.canvas.height = Math.round(height * this.dpr);
     this.camera.width = width; this.camera.height = height;
   }
   draw(time = 0) {
+    if(this.dpr!==(window.devicePixelRatio||1))this.resize(this.camera.width,this.camera.height);
     const c = this.ctx, camera = this.camera, { width: w, height: h, zoom: z } = camera;
     const project=camera.projectGrid.bind(camera),focus=camera.viewFocus;
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.fillStyle = '#8a9d82'; c.fillRect(0, 0, w, h);
     c.translate(w / 2, h / 2); c.scale(z, z); c.translate(-focus.x,-focus.y);
     const corners=[[0,0],[this.world.width,0],[this.world.width,this.world.height],[0,this.world.height]];
     for(let i=0;i<4;i++){const a=project(...corners[i]),b=project(...corners[(i+1)%4]);polygon(c,[a,b,{x:b.x,y:b.y+25},{x:a.x,y:a.y+25}],i%2?'#a49067':'#8b795a');}
-    const matrix=groundMatrix(camera.orbit);c.save();c.transform(matrix.a,matrix.b,matrix.c,matrix.d,0,0);c.drawImage(this.cache,-this.origin.x,-this.origin.y,this.cacheWidth,this.cacheHeight);c.restore();
+    this.drawTerrain(c,groundMatrix(camera.orbit));
     if (this.grid) {
       c.beginPath();
       for(let x=0;x<=this.world.width;x++){const a=project(x,0),b=project(x,this.world.height);c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);}
@@ -134,7 +152,7 @@ export class Renderer {
       const occluding = this.selected && Math.abs(p.x - project(this.selected.x + .5, this.selected.y + .5).x) < 45 && p.y > project(this.selected.x + .5, this.selected.y + .5).y && p.y - project(this.selected.x + .5, this.selected.y + .5).y < 120;
       c.globalAlpha = occluding ? .35 : 1;
       const chopping=this.simulation?.people.some(person=>person.job?.kind==='logging'&&!person.job.path.length&&person.job.source?.x===Math.floor(tree.x)&&person.job.source?.y===Math.floor(tree.y));
-      c.save();c.translate(p.x,p.y);if(chopping&&!this.reducedMotion)c.rotate(Math.sin(this.simulation.time*9)*.018);c.drawImage(this.treeSprite(tree.variant),-80,-170);c.restore();
+      c.save();c.translate(p.x,p.y);if(chopping&&!this.reducedMotion)c.rotate(Math.sin(this.simulation.time*9)*.018);c.drawImage(this.treeSprite(tree.variant),-80,-170,160,190);c.restore();
     }
     c.globalAlpha = 1;
     drawPlacement(c,this.placement,z,project);
@@ -171,27 +189,27 @@ export class Renderer {
     }
   }
   treeSprite(variant){
-    const angle=((Math.round(this.camera.orbit*64)%512)+512)%512/64,key=variant+':'+angle;
+    const angle=((Math.round(this.camera.orbit*64)%512)+512)%512/64,density=rasterDensity(this.camera.zoom,this.dpr),key=variant+':'+angle+':'+density;
     if(this.treeCache.has(key))return this.treeCache.get(key);
-    const sprite=document.createElement('canvas');sprite.width=160;sprite.height=190;const c=sprite.getContext('2d');c.translate(80,170);ellipse(c,9,2,25,9,'#31583a26');
-    drawMesh(c,this.treeMeshes[variant],(x,y,z)=>projectView(x,y,angle,z));this.treeCache.set(key,sprite);if(this.treeCache.size>60)this.treeCache.delete(this.treeCache.keys().next().value);return sprite;
+    const sprite=document.createElement('canvas');sprite.width=160*density;sprite.height=190*density;const c=sprite.getContext('2d');c.scale(density,density);c.translate(80,170);ellipse(c,9,2,25,9,'#31583a26');
+    drawMesh(c,this.treeMeshes[variant],(x,y,z)=>projectView(x,y,angle,z));this.treeCache.set(key,sprite);return sprite;
   }
   objectSprite(key,paint){
-    const angle=((Math.round(this.camera.orbit*64)%512)+512)%512/64,id=key+':'+angle;
+    const angle=((Math.round(this.camera.orbit*64)%512)+512)%512/64,density=rasterDensity(this.camera.zoom,this.dpr),id=key+':'+angle+':'+density;
     if(this.objectCache.has(id))return this.objectCache.get(id);
-    const sprite=document.createElement('canvas');sprite.width=96;sprite.height=100;const c=sprite.getContext('2d');c.translate(48,78);paint(c,(x,y,z)=>projectView(x,y,angle,z));
-    this.objectCache.set(id,sprite);if(this.objectCache.size>192)this.objectCache.delete(this.objectCache.keys().next().value);return sprite;
+    const sprite=document.createElement('canvas');sprite.width=96*density;sprite.height=100*density;const c=sprite.getContext('2d');c.scale(density,density);c.translate(48,78);paint(c,(x,y,z)=>projectView(x,y,angle,z));
+    this.objectCache.set(id,sprite);return sprite;
   }
-  drawBush(bush,p){this.ctx.drawImage(this.objectSprite('bush:'+Math.min(5,bush.remaining),(c,project)=>drawMesh(c,bushMesh(bush.remaining),project)),p.x-48,p.y-78);}
+  drawBush(bush,p){this.ctx.drawImage(this.objectSprite('bush:'+Math.min(5,bush.remaining),(c,project)=>drawMesh(c,bushMesh(bush.remaining),project)),p.x-48,p.y-78,96,100);}
   drawFire(p,time){const c=this.ctx,project=this.camera.projectGrid.bind(this.camera),faces=[];c.save();c.translate(p.x,p.y);
     for(let i=0;i<7;i++)faces.push(...ellipsoid(Math.cos(i/7*Math.PI*2)*.3,Math.sin(i/7*Math.PI*2)*.3,2,.10,.08,4,i%2?'#a4a58a':'#8f977e',6,3));
     drawMesh(c,faces,project);if(this.simulation.firepit){drawLine3D(c,[-.17,-.12,3],[.17,.12,3],project,'#7b5e3e',5);drawLine3D(c,[-.12,.17,3],[.12,-.17,3],project,'#7b5e3e',5);const sway=this.reducedMotion?0:Math.sin(time/180)*.025;drawMesh(c,[{points:[{x:-.14,y:0,z:4},{x:sway,y:0,z:28},{x:.14,y:0,z:4}],color:'#d79c4c'},{points:[{x:0,y:-.13,z:4},{x:0,y:sway,z:23},{x:0,y:.13,z:4}],color:'#eed38a'}],project);}c.restore();
   }
-  drawMineral(mineral,p){this.ctx.drawImage(this.objectSprite('rock:'+mineral.kind,(c,project)=>drawMesh(c,rockMesh(mineral.kind,MINERALS[mineral.kind].color),project)),p.x-48,p.y-78);}
+  drawMineral(mineral,p){this.ctx.drawImage(this.objectSprite('rock:'+mineral.kind,(c,project)=>drawMesh(c,rockMesh(mineral.kind,MINERALS[mineral.kind].color),project)),p.x-48,p.y-78,96,100);}
   drawScatter(item,p){
     const sprite=this.objectSprite('scatter:'+item.kind,(c,project)=>{
     if(item.kind==='sticks'){drawLine3D(c,[-.2,0,2],[.2,.1,3],project,'#85714e',2.6);drawLine3D(c,[0,.05,3],[-.1,-.1,5],project,'#85714e',2);drawLine3D(c,[-.13,.14,2],[.2,.2,2],project,'#9b845b',2);}
-    else{const faces=[];for(let i=0;i<3;i++)faces.push(...ellipsoid(-.13+i*.14,i%2*.12,2,.09,.07,3,'#bdc0a5',6,3));drawMesh(c,faces,project);}});this.ctx.drawImage(sprite,p.x-48,p.y-78);
+    else{const faces=[];for(let i=0;i<3;i++)faces.push(...ellipsoid(-.13+i*.14,i%2*.12,2,.09,.07,3,'#bdc0a5',6,3));drawMesh(c,faces,project);}});this.ctx.drawImage(sprite,p.x-48,p.y-78,96,100);
   }
   drawMinimap() {
     const c = this.mc, cam = this.camera; c.drawImage(this.miniTerrain, 0, 0);
