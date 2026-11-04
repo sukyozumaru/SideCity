@@ -10,14 +10,14 @@ El arranque definido por el usuario son tres colonos fundadores desde el primer 
 
 ## Estado actual
 
-Actualización 0.8: huertos completos, vida autónoma configurable, bienestar, conversaciones y círculos. Esquema 6 migra los anteriores y conserva construcción, puentes y familias. Reglas vigentes en FARM-LIFE.md. La fundición y las siguientes eras quedan pendientes; no repetir lo ya entregado.
+Actualización 0.8: huertos completos, vida autónoma configurable, bienestar, conversaciones y círculos. Esquema 6 migra los anteriores y conserva construcción, puentes y familias. Reglas vigentes en FARM-LIFE.md. La fundición, taller y herramientas de bronce se entregaron en 0.9; las eras posteriores siguen pendientes; no repetir lo ya entregado.
 
 
 La etapa de terreno y cámara se reconstruyó con autorización del usuario; no depende del ZIP anterior. La aplicación activa está en `index.html` y `src/`. El prototipo lateral se conserva en `legacy/`, fuera de la nueva aplicación.
 
 Versión 0.4: mundo procedural de 96 × 72, expansión por sectores de 144, tres fundadores, refugio cooperativo, agua y energía, fogón/cocina, siete habilidades y barra de Orígenes. Almacén separado por categorías; hacha/pico fabricables, extracción finita de piedra/carbón/cobre/estaño y comer. Guardado por semilla, migración y archivos portátiles. Mantener el arte aprobado. Ver INVENTORY.md, REFUGE.md y WORLD.md.
 
-Estado 0.8: construcción libre y puentes, familias y nuevas generaciones, ocho cámaras, nitidez, foley y primeros huertos completos. Iniciativa propia configurable, ánimo/compañía, conversaciones, lenguaje y círculos. Ver FARM-LIFE.md. Siguientes bloques: fundición, más cultivos, retirada/traslado y transición con contenido de la siguiente era. Hierro/plata, hambre, sandbox completo y Safari/iPhone físico siguen pendientes.
+Estado 0.8: construcción libre y puentes, familias y nuevas generaciones, ocho cámaras, nitidez, foley y primeros huertos completos. Iniciativa propia configurable, ánimo/compañía, conversaciones, lenguaje y círculos. Ver FARM-LIFE.md. Estado 0.9: horno/taller, bronce, mejoras de herramientas, Metalurgia y timeline, con optimización medida de cámara y sprites (BRONZE-PERFORMANCE.md). Siguientes bloques: más cultivos, retirada/traslado y contenido de hierro. Hierro/plata, hambre, sandbox completo y Safari/iPhone físico siguen pendientes.
 
 ## Entregas por dependencia
 

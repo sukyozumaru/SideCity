@@ -114,12 +114,12 @@ export class PeopleUI {
     $('person-profession').textContent = group ? 'Orden para todo el grupo' : p.stage==='child'?'Infancia · los oficios se abren al crecer':profession(p) + (p.specialty ? ` · Nivel ${skillLevel(p.skills[p.specialty].xp)}` : '');
     $('person-state').textContent = group ? `${this.selected.filter(id => this.sim.person(id).job).length} de ${this.selected.length} con tarea` : p.state;
     $('stop-work').disabled = !this.selected.some(id => this.sim.person(id).job);
-    $('work-progress').value = !group && p.job ? ['shelter','bridge'].includes(p.job.kind) ? this.sim.jobProject(p.job).progress : Math.min(p.job.progress, 1) : 0;
+    $('work-progress').value = !group && p.job ? ['shelter','bridge','furnace','workshop'].includes(p.job.kind) ? this.sim.jobProject(p.job).progress : Math.min(p.job.progress, 1) : 0;
     for (const need of ['water', 'energy']) { const value = group ? Math.min(...this.selected.map(id => this.sim.person(id).needs[need])) : p.needs[need]; $('need-' + need).value = value; $('need-' + need + '-value').textContent = `${Math.round(value)}%`; }
     for (const [id, task] of Object.entries(TASKS)) {
       const button = $('task-list').querySelector(`[data-task="${id}"]`), reason = !group&&p.stage==='child'&&!['wander','rest','sleep','eat','drink','social'].includes(id)?'Los oficios se abren al crecer.':this.sim.blockReason(id);
       button.disabled = !!reason; button.title = reason || task.detail; button.classList.toggle('assigned', !group && p.job?.kind === id);
-      if(['shelter','bridge'].includes(id))button.hidden=this.category!==task.category||!this.sim.activeProject(id)?.reserved;
+      if(['shelter','bridge','furnace','workshop'].includes(id))button.hidden=this.category!==task.category||!this.sim.activeProject(id)?.reserved;
       button.querySelector('small').textContent = reason || task.detail;
       button.querySelector('.task-level').textContent = group || !task.skill ? '' : `Nv. ${skillLevel(p.skills[task.skill].xp)}`;
     }

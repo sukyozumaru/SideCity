@@ -1,11 +1,11 @@
-# Punto de continuación · SideCity 0.8
+# Punto de continuación · SideCity 0.9
 
-Huertos completos: Cultivar/V, preparación, siembra (1 semilla), buscar agua y volver, humedad/crecimiento y cosecha (4 raíces +2 semillas). Ocho habilidades, semillas iniciales 6, raíces comestibles/cocinables. Primero leer docs/FARM-LIFE.md.
+Leer primero docs/BRONZE-PERFORMANCE.md. Horno: refugio+cosecha+fogón+6 estudios; construir12 madera/16 piedra. Colada3 cobre/1 estaño/1 carbón→2 bronce. Primer bronce abre taller24 madera/10 piedra/2 bronce, hacha+40% tala, pico+35% minería y +15% fabricación con taller. Metalurgia es la novena habilidad. Timeline con tres etapas jugables y futuras marcadas en desarrollo. Esquema7 migra1–6. 79 pruebas.
 
-Vida autónoma por persona, órdenes manuales prioritarias con cuidado urgente y reanudación, paseos sin XP, ánimo/compañía, recuerdos, temas de conversación y lenguaje compartido. Círculos de cultivo y encuentro desde tres conversaciones. Hogares y nacimientos siguen siendo decisiones explícitas. Movimiento suavizado y nuevos efectos/foley de agricultura, fogata y río.
+Rendimiento: terreno top-down por bloques8/4 nativos según densidad, independiente de rotación; cachés por generación que caben seis árboles sin thrashing a zoom/DPR alto. Mantener nitidez. Perfiles comparativos fuera del proyecto, limitados a Chrome aislado: no prometen FPS en hardware físico.
 
-Cinco destinos: Mundo / Cultivar / Construir / Almacén / Vida. Un inspector; comunidad por Vida/Vínculos/Hogares y ficha personal por Órdenes/Habilidades/Vida/Historial. Mantener el arte aprobado y la nitidez nativa de la 0.7. npm test: 75 pruebas. Esquema 6 migra 1–5, sin reiniciar partidas. Preferencias de cámara/audio separadas; controles preservados al añadir Cultivar.
+Huertos, vida autónoma configurable, órdenes y reanudación, conversaciones, recuerdos, círculos, hogares y nacimientos mantienen las reglas0.8: docs/FARM-LIFE.md. Cinco destinos y un inspector; conservar arte aprobado.
 
-GitHub sukyozumaru/SideCity es público. Sites usa el project_id existente en .openai/hosting.json; conservar identidad y audiencia. El usuario rechazó Vercel: no volver a sugerirlo sin nueva petición.
+GitHub sukyozumaru/SideCity público. Sites conserva proyecto/URL/audiencia. El usuario rechazó Vercel; no volver a sugerirlo sin nueva petición.
 
-Pendientes de futuros bloques: fundición y tecnologías/eras siguientes, retirada/traslado de construcciones y huertos, más cultivos, estaciones, conflictos y lenguaje más profundo. No afirmar que están implementados. Verificación física en Safari/iPhone y altavoces/auriculares pendiente.
+Pendiente: hierro/plata, eras posteriores, retirada/traslado, más cultivos/estaciones, hambre, conflictos, lenguaje profundo y Safari/iPhone físico. No afirmar que están implementados.

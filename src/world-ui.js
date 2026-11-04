@@ -1,3 +1,4 @@
+import {itemIcon} from './item-icons.js';
 import { MINERALS, SECTOR_SIZE, sectorOf } from './terrain.js';
 import { eraState } from './era.js';
 import { readSaveFile, writeSaveFile } from './save-transfer.js';
@@ -51,8 +52,17 @@ export class WorldUI {
     $('era-name').textContent=state.name;$('era-stage').textContent=state.stage;$('era-percent').textContent=`${state.percent}%`;$('era-progress').value=state.percent;$('era-time').textContent=`Año ${state.year} · ${state.elapsed}`;
     $('era-status').setAttribute('aria-label',`${state.name}. ${state.stage}. ${state.percent} por ciento. Año ${state.year}. Tiempo ${state.elapsed}.`);
     $('era-detail-time').textContent=`Año ${state.year}, día ${state.day} · ${state.elapsed} de tiempo simulado. Cada año representa 30 minutos del mundo.`;
-    const stamp=state.milestones.map(m=>Number(m.done)).join('');
-    if(stamp!==this.stamp){$('era-milestones').replaceChildren();for(const m of state.milestones){const li=document.createElement('li');li.textContent=`${m.done?'✓':'○'} ${m.label}`;$('era-milestones').append(li);}this.stamp=stamp;}
+    $('era-current-summary').textContent=`${state.name} · ${state.stage} · ${state.percent}%`;
+    const stamp=state.current+':'+state.milestones.map(m=>Number(m.done)).join('');
+    if(stamp!==this.stamp){$('era-milestones').replaceChildren();for(const m of state.milestones){const li=document.createElement('li');li.textContent=`${m.done?'✓':'○'} ${m.label}`;$('era-milestones').append(li);}this.stamp=stamp;
+      const eraIcon=itemIcon(['knowledge','seeds','bronze'][state.current]);$('era-status').querySelector('svg').replaceChildren(...eraIcon.childNodes);
+      $('era-goals-label').textContent=`Objetivos de ${state.name} · ${state.completed}/${state.milestones.length}`;
+      $('era-timeline').replaceChildren();for(const era of state.timeline){
+        const li=document.createElement('li');li.className=era.future?'future':era.status==='Actual'?'current':'';if(era.status==='Actual')li.setAttribute('aria-current','step');
+        const title=document.createElement('h4'),status=document.createElement('span'),text=document.createElement('p');title.textContent=era.name;title.prepend(itemIcon({seed:'knowledge',leaf:'seeds',ingot:'bronze',pick:'pick',book:'knowledge',house:'wood',wheel:'coal',globe:'knowledge'}[era.icon]));status.textContent=era.status;text.textContent=era.learn;
+        li.append(title,status,text);if(era.discover){const hint=document.createElement('p');hint.className='era-discovery';hint.textContent=era.discover;li.append(hint);}$('era-timeline').append(li);
+      }
+    }
     $('world-summary').textContent=`${this.sim.world.width} × ${this.sim.world.height} · 6.912 parcelas · ${this.sim.unlocked.size}/48 sectores abiertos. Semilla ${this.sim.world.seed}. Piedra almacenada: ${this.sim.resources.stone}.`;
     if(this.sector){const cost=this.sim.expansionCost(),reason=this.sim.expansionReason(this.sector.x,this.sector.y);$('parcel-description').textContent=reason||'Amplía tu comunidad hacia este sector vecino. Los ríos siguen siendo obstáculos naturales.';$('unlock-sector').hidden=false;$('unlock-sector').disabled=!!reason;$('unlock-sector').textContent=`Abrir 144 parcelas · ${cost.wood} madera + ${cost.knowledge} saber`;}
   }

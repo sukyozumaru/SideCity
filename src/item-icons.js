@@ -1,5 +1,8 @@
 // Original small line drawings: the same materials as the isometric world.
 const shapes = {
+ bronze:'<path fill="#b3915c" d="m5 18 19-8 5 5-4 10-19 4z"/><path d="m5 18 6 5 18-8M11 23l-5 6"/>',
+ bronzeAxe:'<path stroke="#b89969" stroke-width="4" d="m10 28 12-22"/><path fill="#b3915c" d="m17 7 6-4 6 5-2 8-8-3z"/>',
+ bronzePick:'<path stroke="#b89969" stroke-width="4" d="m10 28 11-21"/><path fill="#b3915c" d="m7 9 10-5 8 3 5 8-11-5-12 2z"/>',
   seeds:'<g fill="#c5b27c"><ellipse cx="11" cy="12" rx="4" ry="6" transform="rotate(-25 11 12)"/><ellipse cx="23" cy="18" rx="4" ry="6" transform="rotate(25 23 18)"/><ellipse cx="12" cy="26" rx="4" ry="5"/></g>',
   roots:'<path fill="#b58a52" d="m10 15 11 2-6 14z"/><path stroke="#91ad68" d="M16 17V4m0 8-7-6m7 7 9-7"/>',
   wood: '<path fill="#94714d" d="m6 21 17-11 5 7-17 11z"/><path d="m10 23 13-8M6 21l5 7M22 10l6 7"/><ellipse cx="9" cy="25" rx="3" ry="4" transform="rotate(-35 9 25)"/>',

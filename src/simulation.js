@@ -1,7 +1,7 @@
 import { SHELTER_COST, SHELTER_WORK, createShelter, insideShelter, shelterPlaces } from './camp.js';
 import { initialSectors, sectorOf, SECTOR_SIZE, WORLD_WIDTH, WORLD_HEIGHT } from './terrain.js';
 import { ITEMS, RECIPES, MINERAL_ITEMS, recipeReason } from './items.js';
-import { constructionMethods, workPlaces } from './construction.js';
+import { constructionMethods, workPlaces, BUILD_TYPES } from './construction.js';
 import { communityMethods } from './community.js';
 import { migrateSettlement, restoreSettlement } from './settlement-save.js';
 import { FARM_TASKS,farmingMethods } from './farming.js';
@@ -9,6 +9,7 @@ import { livingMethods,TOPICS } from './living.js';
 import { migrateLiving,restoreLiving } from './living-save.js';
 
 export const SKILLS = {
+  metalworking:{name:'Metalurgia',profession:'Fundidor',action:'Fundir bronce',seconds:14,xp:18,detail:'Domina el calor, funde aleaciones y fabrica herramientas de bronce.'},
   farming:{name:'Cultivo',profession:'Horticultor',action:'Cultivar',seconds:5,xp:12,detail:'Prepara tierra, siembra, riega y recoge raíces.'},
   logging: { name: 'Tala', profession: 'Leñador', action: 'Talar', seconds: 5, xp: 14, detail: 'Busca un árbol cercano y obtiene 4 de madera.' },
   foraging: { name: 'Recolección', profession: 'Recolector', action: 'Recolectar', seconds: 4, xp: 10, detail: 'Recoge alimento de los arbustos del valle.' },
@@ -19,8 +20,9 @@ export const SKILLS = {
   mining: { name: 'Minería', profession: 'Minero', action: 'Extraer roca', seconds: 7, xp: 12, detail: 'Extrae hasta 2 materiales por trabajo. Requiere un pico de piedra.' },
 };
 export const TASKS = {
+  ...Object.fromEntries(['furnace','workshop'].map(id=>[id,{action:'Construir '+BUILD_TYPES[id].name.toLowerCase(),skill:'building',category:'build',seconds:BUILD_TYPES[id].work,detail:BUILD_TYPES[id].detail}])),
   ...FARM_TASKS,
-  ...Object.fromEntries(Object.entries(SKILLS).filter(([id])=>id!=='farming').map(([id, skill]) => [id, { ...skill, skill: id, category: id === 'building' ? 'build' : 'work' }])),
+  ...Object.fromEntries(Object.entries(SKILLS).filter(([id])=>!['farming','metalworking'].includes(id)).map(([id, skill]) => [id, { ...skill, skill: id, category: id === 'building' ? 'build' : 'work' }])),
   shelter: { action: 'Construir refugio', skill: 'building', category: 'build', seconds: SHELTER_WORK, detail: '20 madera, una sola reserva. Los tres pueden colaborar.' },
   bridge: { action:'Construir puente',skill:'building',category:'build',seconds:36,detail:'Elige una orilla en Construir. La obra se comparte entre los constructores.' },
   wander:{action:'Pasear',category:'care',seconds:2,detail:'Da una vuelta corta por tierra cercana, sin XP.'},
@@ -30,7 +32,7 @@ export const TASKS = {
   sleep: { action: 'Dormir en refugio', category: 'care', seconds: 10, detail: 'Requiere el refugio terminado. Recupera más energía.' },
   scavenge: { action: 'Buscar ramas y piedras', skill: 'foraging', category: 'work', seconds: 3, detail: 'Recoge ramas y piedritas del suelo del territorio abierto.' },
   eat: { action: 'Comer', category: 'care', seconds: 4, detail: 'Usa 1 comida (+25 energía) o 1 baya (+10 energía).' },
-  ...Object.fromEntries(Object.entries(RECIPES).map(([id,r]) => [id,{action:`Fabricar ${ITEMS[r.output].name.toLowerCase()}`,skill:'building',category:'craft',seconds:r.seconds,detail:ITEMS[r.output].use}])),
+  ...Object.fromEntries(Object.entries(RECIPES).map(([id,r]) => [id,{action:`${id==='smeltBronze'?'Fundir':'Fabricar'} ${ITEMS[r.output].name.toLowerCase()}`,skill:r.station?'metalworking':'building',category:'craft',seconds:r.seconds,detail:ITEMS[r.output].use}])),
 };
 export const MAX_LEVEL = 20;
 const knownSkill = id => typeof id === 'string' && Object.hasOwn(SKILLS, id);
@@ -95,13 +97,13 @@ export class Simulation {
     return '';
   }
   unlockSector(x,y) {const reason=this.expansionReason(x,y);if(reason)return {ok:false,reason};const cost=this.expansionCost();this.resources.wood-=cost.wood;this.resources.knowledge-=cost.knowledge;this.unlocked.add(key(x,y));this.emit('Territorio ampliado: 144 parcelas nuevas.');return {ok:true};}
-  walkable(tile) { return tile && !this.plotAt(tile.x,tile.y) && this.isUnlocked(tile.x,tile.y) && (tile.type !== 'water'||this.hasBridge(tile.x,tile.y)) && !this.standing(tile.x, tile.y) && !(this.world.mineralAt(tile.x,tile.y)&&this.mineralRemaining(this.world.mineralAt(tile.x,tile.y))) && !this.shrubs.some(s => s.x === tile.x && s.y === tile.y) && !this.buildings.some(b=>b.kind==='shelter'&&b.reserved&&insideShelter(b,tile.x,tile.y)); }
+  walkable(tile) { return tile && !this.plotAt(tile.x,tile.y) && this.isUnlocked(tile.x,tile.y) && (tile.type !== 'water'||this.hasBridge(tile.x,tile.y)) && !this.standing(tile.x, tile.y) && !(this.world.mineralAt(tile.x,tile.y)&&this.mineralRemaining(this.world.mineralAt(tile.x,tile.y))) && !this.shrubs.some(s => s.x === tile.x && s.y === tile.y) && !this.buildings.some(b=>b.kind!=='bridge'&&b.reserved&&insideShelter(b,tile.x,tile.y)); }
   route(person, target) { return findRoute(this.world, person, target, t => this.walkable(t)); }
   emit(text) { this.events.push(text); this.events = this.events.slice(-20); this.revision++; }
   knowsFire() { return this.firepit || this.resources.knowledge >= 3 || this.people.reduce((n,p)=>n+p.skills.study.completed,0)>=3; }
   blockReason(kind,destination) {
     if(FARM_TASKS[kind])return this.farmReason(kind,destination);
-    if(['shelter','bridge'].includes(kind)){
+    if(['shelter','bridge','furnace','workshop'].includes(kind)){
       const b=destination?.buildingId?this.project(destination.buildingId):this.activeProject(kind);
       if(!b||b.kind!==kind||b.complete)return 'Elige dónde crear una obra en el menú Construir.';
       if(kind==='bridge'&&!b.reserved)return 'Coloca primero el puente desde Construir.';
@@ -109,8 +111,8 @@ export class Simulation {
       if(!b.reserved&&this.people.some(p=>insideShelter(b,p.x,p.y)))return 'Mueve al habitante que está en el solar antes de empezar.';
       return '';
     }
-    if (RECIPES[kind]) return recipeReason(this.resources,kind);
-    if (kind === 'mining' && !this.resources.stonePick) return 'Fabrica un pico de piedra en Almacén → Fabricar.';
+    if (RECIPES[kind]) {const station=RECIPES[kind].station;if(station&&!this.buildings.some(b=>b.kind===station&&b.complete))return `Termina un ${BUILD_TYPES[station].name.toLowerCase()} desde Construir.`;return recipeReason(this.resources,kind);}
+    if (kind === 'mining' && !this.resources.stonePick&&!this.resources.bronzePick) return 'Fabrica un pico de piedra en Almacén → Fabricar.';
     if (kind === 'eat' && this.resources.meals < 1 && this.resources.rawFood < 1 && this.resources.vegetables<1) return 'Recoge bayas o prepara una comida primero.';
     if (kind === 'sleep' && !this.homes().length) return 'Primero termina un refugio. Mientras tanto puedes descansar al aire libre.';
     if (kind === 'building' && this.firepit) return 'El fogón ya está preparado.';
@@ -127,10 +129,10 @@ export class Simulation {
     if (kind === 'foraging') for (const s of this.shrubs) if (s.remaining > 0) for (const [x, y] of neighbours(s.x, s.y)) if (this.walkable(this.world.get(x, y))) candidates.push({ x, y, source: { x: s.x, y: s.y } });
     if (kind === 'exploration') for (const t of this.world.tiles) if (this.walkable(t) && !person.explored.includes(key(t.x, t.y)) && Math.hypot(t.x + .5 - person.x, t.y + .5 - person.y) >= 3) candidates.push({ x: t.x, y: t.y, source: { x: t.x, y: t.y } });
     if (['study','rest','eat'].includes(kind)) candidates.push({ x: Math.floor(person.x), y: Math.floor(person.y) });
-    if (RECIPES[kind]) candidates.push({x:22,y:16});
+    if (RECIPES[kind]) {const station=RECIPES[kind].station;if(!station)candidates.push({x:22,y:16});else for(const b of this.buildings)if(b.kind===station&&b.complete&&(!preferred?.buildingId||b.id===preferred.buildingId))candidates.push(...workPlaces(b).filter(t=>this.walkable(this.world.get(t.x,t.y))).map(t=>({...t,source:{x:b.x,y:b.y,buildingId:b.id}})));}
     if(kind==='mining')for(const node of this.world.minerals)if(MINERAL_ITEMS[node.kind]&&this.isUnlocked(node.x,node.y)&&this.mineralRemaining(node)>0)for(const [x,y]of neighbours(node.x,node.y))if(this.walkable(this.world.get(x,y)))candidates.push({x,y,source:{x:node.x,y:node.y}});
     if (kind === 'building' || kind === 'cooking') candidates.push({ x: 21, y: 16 });
-    if (['shelter','bridge'].includes(kind)){const b=preferred?.buildingId?this.project(preferred.buildingId):this.activeProject(kind);if(b)candidates.push(...workPlaces(b).filter(t=>this.walkable(this.world.get(t.x,t.y))).map(t=>({...t,source:{x:t.x,y:t.y,buildingId:b.id}})));}
+    if (['shelter','bridge','furnace','workshop'].includes(kind)){const b=preferred?.buildingId?this.project(preferred.buildingId):this.activeProject(kind);if(b)candidates.push(...workPlaces(b).filter(t=>this.walkable(this.world.get(t.x,t.y))).map(t=>({...t,source:{x:t.x,y:t.y,buildingId:b.id}})));}
     if(kind==='sleep')for(const b of this.homes())for(const t of shelterPlaces(b))if(this.walkable(this.world.get(t.x,t.y)))candidates.push({...t,source:{x:t.x,y:t.y,buildingId:b.id}});
     if(kind==='social')for(const other of this.people)if(other.id!==person.id&&this.canTalkTo(other)&&(!preferred?.personId||preferred.personId===other.id))for(const [x,y]of neighbours(Math.floor(other.x),Math.floor(other.y)))if(this.walkable(this.world.get(x,y)))candidates.push({x,y,source:{x:Math.floor(other.x),y:Math.floor(other.y),personId:other.id,topic:preferred?.topic||'greeting'}});
     if (kind === 'drink') for (const t of this.world.tiles) if (this.walkable(t)) for (const [x, y] of neighbours(t.x, t.y)) if (this.world.get(x, y)?.type === 'water') candidates.push({ x: t.x, y: t.y, source: { x, y } });
@@ -143,7 +145,7 @@ export class Simulation {
       const preferredB = preferred && b.source?.x === preferred.x && b.source?.y === preferred.y;
       return Number(occupied(a)) - Number(occupied(b)) || Number(preferredB) - Number(preferredA) || Math.abs(a.x - person.x) + Math.abs(a.y - person.y) - Math.abs(b.x - person.x) - Math.abs(b.y - person.y);
     });
-    for (const candidate of filtered) { if(['sleep','shelter','bridge'].includes(kind)&&this.people.some(p=>p.id!==person.id&&p.job&&['sleep','shelter','bridge'].includes(p.job.kind)&&p.job.target.x===candidate.x&&p.job.target.y===candidate.y))continue;const path = this.route(person, candidate); if (path) return { ...candidate, path }; }
+    for (const candidate of filtered) { if(['sleep','shelter','bridge','furnace','workshop'].includes(kind)&&this.people.some(p=>p.id!==person.id&&p.job&&['sleep','shelter','bridge','furnace','workshop'].includes(p.job.kind)&&p.job.target.x===candidate.x&&p.job.target.y===candidate.y))continue;const path = this.route(person, candidate); if (path) return { ...candidate, path }; }
     return null;
   }
   assign(id, kind, destination,{automatic=false,restoring=false}={}) {
@@ -170,7 +172,7 @@ export class Simulation {
     return this.cancelBuilding(this.shelter.id);
   }
   setSpecialty(id, skill) { const p = this.person(id); if (p && (skill === '' || knownSkill(skill))) { p.specialty = skill || null; this.revision++; } }
-  speed(person, kind) { const skill = TASKS[kind]?.skill; return (skill ? 1 + (skillLevel(person.skills[skill].xp) - 1) * .04 + (person.specialty === skill ? .1 : 0) : 1) * (kind==='logging'&&this.resources.stoneAxe?1.15:1); }
+  speed(person, kind) { const skill = TASKS[kind]?.skill; return (skill ? 1 + (skillLevel(person.skills[skill].xp) - 1) * .04 + (person.specialty === skill ? .1 : 0) : 1) * (kind==='logging'?(this.resources.bronzeAxe?1.4:this.resources.stoneAxe?1.15:1):kind==='mining'&&this.resources.bronzePick?1.35:1)*(RECIPES[kind]&&this.buildings.some(b=>b.kind==='workshop'&&b.complete)?1.15:1); }
   award(person, kind, outcome, taskKind=kind) {
     const skill = person.skills[kind], oldLevel = skillLevel(skill.xp), oldXP = skill.xp;
     skill.xp = Math.min(threshold(MAX_LEVEL), skill.xp + SKILLS[kind].xp); skill.completed++; person.completed++;
@@ -190,8 +192,8 @@ export class Simulation {
       person.history.unshift({kind,time:Math.floor(this.time),xp:0,outcome});person.history=person.history.slice(0,20);this.feedback.push({kind,x:person.x,y:person.y,time:this.time,outcome:`+${bond} vínculo`});return{ok:true};
     }
     if(RECIPES[kind]){
-      const recipe=RECIPES[kind];for(const [id,n]of Object.entries(recipe.cost))r[id]-=n;r[recipe.output]++;
-      outcome=`${ITEMS[recipe.output].name} terminada`;this.award(person,'building',outcome,kind);this.emit(outcome);return {ok:true};
+      const recipe=RECIPES[kind];for(const [id,n]of Object.entries(recipe.cost))r[id]-=n;r[recipe.output]+=recipe.amount||1;
+      outcome=`+${recipe.amount||1} ${ITEMS[recipe.output].name.toLowerCase()}`;this.award(person,recipe.station?'metalworking':'building',outcome,kind);this.emit(outcome);return {ok:true};
     }
     if(kind==='mining'){
       const node=this.world.mineralAt(source.x,source.y),item=MINERAL_ITEMS[node?.kind];if(!item||!this.mineralRemaining(node))return {ok:false,depleted:true};
@@ -245,9 +247,9 @@ export class Simulation {
       if (!person.job && person.needs.water < 25) this.assign(person.id, 'drink',undefined,{automatic:true});
       else if (!person.job && person.needs.energy < 25) this.assign(person.id, this.homes().length ? 'sleep' : 'rest',undefined,{automatic:true});
       const job = person.job; if (!job) continue;
-      if(RECIPES[job.kind]&&this.resources[RECIPES[job.kind].output]>0){this.stop(person.id);continue;}
+      if(RECIPES[job.kind]&&!RECIPES[job.kind].repeatable&&this.resources[RECIPES[job.kind].output]>0){this.stop(person.id);continue;}
       if (job.kind === 'building' && this.firepit) { this.stop(person.id); continue; }
-      if (['shelter','bridge'].includes(job.kind) && this.jobProject(job).complete) { this.stop(person.id); continue; }
+      if (['shelter','bridge','furnace','workshop'].includes(job.kind) && this.jobProject(job).complete) { this.stop(person.id); continue; }
       if (job.path.length) {
         const waypoint = job.path[0];
         if (!this.walkable(this.world.get(Math.floor(waypoint.x), Math.floor(waypoint.y)))) {
@@ -274,13 +276,13 @@ export class Simulation {
       if(job.kind==='social'){const other=this.person(job.source.personId);if(other&&this.canTalkTo(other))other.direction={x:person.x-other.x,y:person.y-other.y};}
       const skill = TASKS[job.kind].skill;
       if (skill) person.skills[skill].seconds += dt;
-      if (['shelter','bridge'].includes(job.kind)) {
+      if (['shelter','bridge','furnace','workshop'].includes(job.kind)) {
         const b=this.jobProject(job),contribution=Math.min(dt*this.speed(person,job.kind),(1-b.progress)*b.work);
         b.progress=Math.min(1,b.progress+contribution/b.work);b.contributions[person.id]=Math.min(b.work,(b.contributions[person.id]||0)+contribution);
         if (b.progress >= 1 - 1e-9) {
           b.progress=1;b.complete=true;
-          for (const worker of this.people) { if (b.contributions[worker.id] >= 1) this.award(worker, 'building', b.kind==='bridge'?'Puente terminado':'Refugio terminado en equipo',b.kind); if (['shelter','bridge'].includes(worker.job?.kind)&&this.jobProject(worker.job)===b) this.stop(worker.id); }
-          this.feedback.push({kind:'construction',x:b.x+b.width/2,y:b.y+b.height/2,time:this.time,outcome:b.kind==='bridge'?'Paso abierto':'Refugio listo'});this.emit(b.kind==='bridge'?'Puente terminado. Los colonos ya pueden cruzar.':'Refugio terminado. Hay tres nuevas plazas.');
+          for (const worker of this.people) { if (b.contributions[worker.id] >= 1) this.award(worker, 'building', `${BUILD_TYPES[b.kind].name} terminado en equipo`,b.kind); if (['shelter','bridge','furnace','workshop'].includes(worker.job?.kind)&&this.jobProject(worker.job)===b) this.stop(worker.id); }
+          this.feedback.push({kind:'construction',x:b.x+b.width/2,y:b.y+b.height/2,time:this.time,outcome:`${BUILD_TYPES[b.kind].name} listo`});this.emit(`${BUILD_TYPES[b.kind].name} terminado. ${BUILD_TYPES[b.kind].detail}`);
         }
         continue;
       }
@@ -299,7 +301,7 @@ export class Simulation {
     }
   }
   snapshot() {
-    return { version: 6, plots:structuredClone(this.plots),nextPlot:this.nextPlot,culture:structuredClone(this.culture),circles:structuredClone(this.circles),nextCircle:this.nextCircle,seed: this.world.seed, time: this.time, resources: { ...this.resources }, firepit: this.firepit, shelter: structuredClone(this.shelter),buildings:structuredClone(this.buildings),nextBuilding:this.nextBuilding,relationships:[...this.relationships],households:structuredClone(this.households),nextPerson:this.nextPerson,unlocked:[...this.unlocked],scavenged:[...this.scavenged],mined:[...this.mined],
+    return { version: 7, plots:structuredClone(this.plots),nextPlot:this.nextPlot,culture:structuredClone(this.culture),circles:structuredClone(this.circles),nextCircle:this.nextCircle,seed: this.world.seed, time: this.time, resources: { ...this.resources }, firepit: this.firepit, shelter: structuredClone(this.shelter),buildings:structuredClone(this.buildings),nextBuilding:this.nextBuilding,relationships:[...this.relationships],households:structuredClone(this.households),nextPerson:this.nextPerson,unlocked:[...this.unlocked],scavenged:[...this.scavenged],mined:[...this.mined],
       timber: [...this.timber], shrubs: this.shrubs.map(s => s.remaining),
       people: this.people.map(p => ({ autonomy:p.autonomy,mood:p.mood,company:p.company,autoAt:p.autoAt,memories:structuredClone(p.memories),resumeOrder:structuredClone(p.resumeOrder),id:p.id,name:p.name,color:p.color,hair:p.hair,stage:p.stage,parents:[...p.parents],bornAt:p.bornAt,x:p.x,y:p.y, needs: { ...p.needs }, specialty: p.specialty, skills: structuredClone(p.skills), completed: p.completed, history: structuredClone(p.history), explored: [...p.explored], order: p.job ? { automatic:p.job.automatic,kind: p.job.kind, target: p.job.source || p.job.target, progress: Math.min(p.job.progress, .999) } : null })) };
   }
@@ -314,16 +316,17 @@ export class Simulation {
     if(data?.version===3){data=structuredClone(data);data.version=4;data.mined=[];for(const id of Object.keys(ITEMS))if(!Object.hasOwn(data.resources,id))data.resources[id]=0;for(const p of data.people||[])p.skills.mining||={xp:0,completed:0,seconds:0};}
     if(data?.version===4)data=migrateSettlement(data);
     if(data?.version===5)data=migrateLiving(data);
+    if(data?.version===6){data=structuredClone(data);data.version=7;for(const id of ['bronze','bronzeAxe','bronzePick'])data.resources[id]??=0;for(const p of data.people||[])p.skills.metalworking??={xp:0,completed:0,seconds:0};}
     const valid = (condition) => { if (!condition) throw new Error('Guardado de civilización inválido.'); };
     const number = (n, max, integer = false) => Number.isFinite(n) && n >= 0 && n <= max && (!integer || Number.isInteger(n));
-    valid(data?.version === 6 && data.seed === world.seed && number(data.time, 1e9) && typeof data.firepit === 'boolean');
+    valid(data?.version === 7 && data.seed === world.seed && number(data.time, 1e9) && typeof data.firepit === 'boolean');
     const sim = new Simulation(world);
     valid(Array.isArray(data.unlocked)&&data.unlocked.length>=16&&data.unlocked.length<=48&&new Set(data.unlocked).size===data.unlocked.length&&initialSectors().every(k=>data.unlocked.includes(k))&&data.unlocked.every(k=>/^\d+,\d+$/.test(k)&&Number(k.split(',')[0])<8&&Number(k.split(',')[1])<6));sim.unlocked=new Set(data.unlocked);
     const seen=new Set(['0,0']),queue=['0,0'];for(let i=0;i<queue.length;i++){const [x,y]=queue[i].split(',').map(Number);for(const [a,b] of neighbours(x,y)){const k=key(a,b);if(sim.unlocked.has(k)&&!seen.has(k)){seen.add(k);queue.push(k);}}}valid(seen.size===sim.unlocked.size);
     valid(Array.isArray(data.scavenged)&&new Set(data.scavenged).size===data.scavenged.length&&data.scavenged.every(k=>world.scatter.some(s=>key(s.x,s.y)===k)));sim.scavenged=new Set(data.scavenged);
     valid(data.resources && Object.keys(sim.resources).every(k => number(data.resources[k], 1e7, true)));
     sim.resources = Object.fromEntries(Object.keys(sim.resources).map(k => [k, data.resources[k]])); sim.time = data.time; sim.firepit = data.firepit;
-    valid(sim.resources.stoneAxe<=1&&sim.resources.stonePick<=1);
+    valid(sim.resources.stoneAxe<=1&&sim.resources.stonePick<=1&&sim.resources.bronzeAxe<=1&&sim.resources.bronzePick<=1);
     valid(Array.isArray(data.mined)&&new Set(data.mined.map(n=>n?.[0])).size===data.mined.length);
     for(const entry of data.mined){valid(Array.isArray(entry)&&entry.length===2&&typeof entry[0]==='string');const [x,y]=entry[0].split(',').map(Number),node=world.mineralAt(x,y);valid(node&&key(x,y)===entry[0]&&MINERAL_ITEMS[node.kind]&&number(entry[1],node.richness,true));sim.mined.set(entry[0],entry[1]);}
     valid(Array.isArray(data.timber) && data.timber.length === sim.timber.size && new Set(data.timber.map(t => t?.[0])).size === sim.timber.size);
@@ -342,7 +345,7 @@ export class Simulation {
       Object.assign(p, { x: saved.x, y: saved.y, needs: { ...saved.needs }, specialty: saved.specialty, skills: structuredClone(saved.skills), completed: saved.completed, history: structuredClone(saved.history), explored: [...saved.explored] });
       if (saved.order) {
         valid((saved.order.kind === 'move' || knownTask(saved.order.kind)) && number(saved.order.progress, 1) && saved.order.target && Number.isInteger(saved.order.target.x) && Number.isInteger(saved.order.target.y));
-        if(['shelter','bridge','sleep'].includes(saved.order.kind))valid(sim.project(saved.order.target.buildingId));
+        if(['shelter','bridge','furnace','workshop','sleep'].includes(saved.order.kind))valid(sim.project(saved.order.target.buildingId));
         if(saved.order.kind==='social')valid(sim.person(saved.order.target.personId)&&Object.hasOwn(TOPICS,saved.order.target.topic));
         if(saved.order.kind==='waterPlot')valid(typeof saved.order.target.fetch==='boolean');
         if(FARM_TASKS[saved.order.kind]&&saved.order.kind!=='extractSeeds')valid(sim.plot(saved.order.target.plotId));

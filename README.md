@@ -4,7 +4,7 @@ Una civilización a escala de barrio: diseña la ciudad y dirige a las personas 
 
 La evolución humana por eras y el sandbox se suman como dirección de desarrollo. La definición unificada y el alcance de cada prototipo están en [docs/SIDECITY.md](docs/SIDECITY.md).
 
-## Versión 0.8 · Huertos y vida del valle
+## Versión 0.9 · Bronce y cámara fluida
 
 Reconstrucción limpia autorizada el 3 de noviembre de 2026. La nueva aplicación sustituye el prototipo lateral como fuente de desarrollo. El ZIP anterior ya no es una dependencia.
 
@@ -14,13 +14,17 @@ Reconstrucción limpia autorizada el 3 de noviembre de 2026. La nueva aplicació
 - Inspección de parcelas, cuadrícula opcional, minimapa navegable y vista completa.
 - Ana, Ivo y Nara seleccionables, rutas por tierra y órdenes individuales o para los tres.
 - Talar, recolectar, estudiar, explorar, preparar fogón y cocinar; materiales finitos y primer descubrimiento del fuego.
-- Ocho habilidades por persona, niveles 1–20, experiencia, especialidad y registro de trabajos. Menús de Órdenes, Habilidades, Vida e Historial.
+- Nueve habilidades por persona, niveles 1–20, experiencia, especialidad y registro de trabajos. Menús de Órdenes, Habilidades, Vida e Historial.
 - Guardado de la comunidad, niveles, recursos, órdenes y fogón; copia válida de respaldo. Cámara y cuadrícula recordadas por separado.
 - Mapa a pantalla completa; HUD compacto en verde oscuro, sin las franjas claras superior e inferior. Adaptación panorámica, móvil y horizontal.
 - Primer refugio cooperativo para los tres: reserva única, progreso visual, pausa/reanudación y cancelación con devolución.
 - Beber en la orilla, descansar y dormir en el refugio. Agua/energía, puestos de trabajo distintos y movimiento visual más suave.
 - Mini barra de era con etapa, logros reales, porcentaje, tiempo y año del mundo.
 - Arte original dibujado por código, sin dependencias ni descargas de imágenes o fuentes.
+
+## Bronce y rendimiento
+
+Horno y taller colocables, cobre + estaño + carbón → bronce, herramientas comunitarias y Metalurgia. El progreso abre un timeline con hitos y etapas futuras identificadas. El terreno se reutiliza por bloques al rotar y las cachés conservan los sprites necesarios a zoom alto. Partidas anteriores migran sin reinicio. Reglas y mediciones en [BRONZE-PERFORMANCE.md](docs/BRONZE-PERFORMANCE.md).
 
 ## Cultivo y vida cotidiana
 
@@ -69,6 +73,6 @@ Abrir `http://127.0.0.1:4173`. El servidor escucha solo en el equipo local. Para
 - `docs/`: plan, dirección artística, evolución y resultados de verificación.
 - `legacy/`: archivo histórico; no forma parte de la nueva aplicación.
 
-75 pruebas automatizadas de terreno, cámara, tareas, refugio, necesidades, semillas, expansión y guardado. Revisión visual a 1440, 768 y 390 píxeles de ancho; comprobaciones adicionales en horizontal. Safari en un iPhone real sigue pendiente. Las partidas se guardan en el navegador; no hay sincronización en la nube ni monetización.
+79 pruebas automatizadas de terreno, cámara, tareas, refugio, necesidades, semillas, expansión y guardado. Revisión visual a 1440, 768 y 390 píxeles de ancho; comprobaciones adicionales en horizontal. Safari en un iPhone real sigue pendiente. Las partidas se guardan en el navegador; no hay sincronización en la nube ni monetización.
 
-Reglas y límites: [trabajos](docs/PROFESSIONS.md), [refugio y cuidado](docs/REFUGE.md), [mundo y eras](docs/WORLD.md). Fundición, hambre y eras posteriores siguen en el plan. Construcción libre, puentes, relaciones y nuevas generaciones ya están implementados: ver docs/SETTLEMENT.md.
+Reglas y límites: [trabajos](docs/PROFESSIONS.md), [refugio y cuidado](docs/REFUGE.md), [mundo y eras](docs/WORLD.md). Fundición, taller, herramientas de bronce y timeline de eras ya son jugables: ver [BRONZE-PERFORMANCE.md](docs/BRONZE-PERFORMANCE.md). Hambre y eras posteriores al bronce siguen en el plan. Construcción libre, puentes, relaciones y nuevas generaciones ya están implementados: ver docs/SETTLEMENT.md.

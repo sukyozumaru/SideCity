@@ -24,9 +24,9 @@ export function drawColonist(c,person,point,options){
   drawMesh(c,faces,project);
   const yaw=Math.PI/4+view*Math.PI/4;if(dx*Math.sin(yaw)+dy*Math.cos(yaw)>.12)for(const sign of[-1,1]){const p=project(sign*.055,.112,head);ellipse(p.x,p.y,1,1.1,'#413a2e');}
   line([-.15,0,base+2],[.15,0,base+2],'#7b6545',2);
-  if(working&&['logging','mining','building','shelter','bridge','craftAxe','craftPick','preparePlot'].includes(kind)){
+  if(working&&['logging','mining','building','shelter','bridge','craftAxe','craftPick','craftBronzeAxe','craftBronzePick','smeltBronze','furnace','workshop','preparePlot'].includes(kind)){
    line([.22,.22,handZ-7],[.22,.25,handZ+11],'#8e744f',3);
-   drawMesh(c,box(.24,.25,handZ+8,kind==='mining'?.28:.17,.09,kind==='mining'?4:7,kind==='logging'||kind==='mining'?'#9ca38e':'#b69667'),project);
+   drawMesh(c,box(.24,.25,handZ+8,kind==='mining'?.28:.17,.09,kind==='mining'?4:7,options.bronzeTool?'#b3915c':kind==='logging'||kind==='mining'?'#9ca38e':'#b69667'),project);
   }
   if(working&&['foraging','eat'].includes(kind))drawMesh(c,ellipsoid(.21,.23,handZ,.055,.055,3,'#b96956',5,3),project);
   if(kind==='waterPlot'&&(working||moving)){drawMesh(c,box(.22,.22,handZ-4,.14,.14,8,'#a58c60'),project);if(!person.job.source.fetch&&!reducedMotion)for(let i=0;i<4;i++){const t=(time/500+i*.27)%1,p=project(.2,.3+t*.22,handZ-5-t*20);ellipse(p.x,p.y,1,1.8,'#91c2bd');}}

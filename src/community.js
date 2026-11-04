@@ -32,7 +32,7 @@ export const communityMethods={
     for(const p of this.people)if(p.stage==='child'&&this.time-p.bornAt>=CHILD_SECONDS){p.stage='adult';this.emit(`${p.name} ha crecido y ya puede aprender un oficio.`);}
     for(let i=0;i<this.people.length;i++)for(let j=i+1;j<this.people.length;j++){
       const a=this.people[i],b=this.people[j];
-      if(a.job&&b.job&&['shelter','bridge'].includes(a.job.kind)&&a.job.kind===b.job.kind&&this.jobProject(a.job)===this.jobProject(b.job)&&!a.job.path.length&&!b.job.path.length)this.addBond(a.id,b.id,dt*.16);
+      if(a.job&&b.job&&['shelter','bridge','furnace','workshop'].includes(a.job.kind)&&a.job.kind===b.job.kind&&this.jobProject(a.job)===this.jobProject(b.job)&&!a.job.path.length&&!b.job.path.length)this.addBond(a.id,b.id,dt*.16);
     }
     for(const h of this.households)if(h.plan){
       const parents=h.parents.map(id=>this.person(id));

@@ -1,5 +1,8 @@
 // Sprites are sampled at or above their final physical pixel size, never enlarged.
 export const rasterDensity=(zoom,dpr)=>Math.max(1,Math.ceil(zoom*dpr));
+// A generation contains one orientation and density. Keep its entire finite catalogue;
+// a smaller LRU repeatedly evicts and rebuilds assets inside the same frame.
+export const spriteBudget=(width,height,density,count,minimum=0)=>Math.max(minimum,width*height*density*density*count);
 export function matrixStretch({a,b,c,d}){
   const sum=a*a+b*b+c*c+d*d,det=a*d-b*c;
   return Math.sqrt((sum+Math.sqrt(Math.max(0,sum*sum-4*det*det)))/2);

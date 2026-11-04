@@ -70,10 +70,10 @@ export class InventoryUI {
       this.last=stamp;
     }
     for(const [id,r]of Object.entries(RECIPES)){
-      const article=$('recipe-list').querySelector(`[data-recipe="${id}"]`),reason=this.sim.blockReason(id),active=this.sim.people.find(p=>p.job?.kind===id),owned=this.sim.resources[r.output]>0;
+      const article=$('recipe-list').querySelector(`[data-recipe="${id}"]`),reason=this.sim.blockReason(id),active=this.sim.people.find(p=>p.job?.kind===id),owned=!r.repeatable&&this.sim.resources[r.output]>0;
       article.querySelector('.recipe-cost').textContent=Object.entries(r.cost).map(([item,n])=>`${ITEMS[item].name} ${this.sim.resources[item]}/${n}`).join(' · ');
       article.querySelector('progress').hidden=!active;article.querySelector('progress').value=active?.job?.progress||0;
-      article.querySelector('.recipe-reason').textContent=owned?'Disponible para los tres.':active?`${active.name}: ${active.state.toLowerCase()}.`:reason||`${r.seconds} s de trabajo base · Construcción +25 XP`;
+      article.querySelector('.recipe-reason').textContent=owned?'Disponible para los tres.':active?`${active.name}: ${active.state.toLowerCase()}.`:reason||`${r.seconds} s · ${r.station?'Metalurgia +18 XP':'Construcción +25 XP'}${r.amount?' · produce '+r.amount+' lingotes':''}`;
       const button=article.querySelector('button');button.disabled=!!reason||!!active;button.textContent=owned?'Ya fabricada':active?'Fabricación en curso':`Asignar a ${worker?.name||'Ana'}`;
     }
   }

@@ -1,3 +1,4 @@
+import {drawMetalBuilding} from './metal-renderer.js';
 import { project } from './core.js';
 import { buildingTiles } from './construction.js';
 import { drawShelter } from './camp-renderer.js';
@@ -26,6 +27,7 @@ export function drawPlacement(c,draft,zoom,projector=project){
   if(!draft)return;c.save();const color=draft.ok?'#c0d59a':'#d2a28a';c.lineWidth=2/zoom;
   for(const t of buildingTiles(draft)){poly(c,[projector(t.x,t.y),projector(t.x+1,t.y),projector(t.x+1,t.y+1),projector(t.x,t.y+1)],draft.ok?'#a4bf7e55':'#b77d6555',color);}
   if(draft.kind==='shelter'){c.globalAlpha=.45;drawShelter(c,{...draft,reserved:true,complete:true,progress:1},false,projector);}
+  else if(['furnace','workshop'].includes(draft.kind)){c.globalAlpha=.45;drawMetalBuilding(c,{...draft,reserved:true,complete:true,progress:1},projector);}
   else if(draft.span){c.globalAlpha=.6;drawBridge(c,{...draft,reserved:true,complete:true,progress:1},projector);}
   c.restore();
 }

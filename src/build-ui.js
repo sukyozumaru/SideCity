@@ -23,11 +23,11 @@ export class BuildUI{
   select(tile){if(!this.kind)return false;if(tile){this.anchor={x:tile.x,y:tile.y};this.preview();}return true;}
   preview(){
     const d=this.anchor?this.sim.previewBuilding(this.kind,this.anchor.x,this.anchor.y,this.axis):null;this.renderer.placement=d;
-    $('placement-message').textContent=d?(d.reason||`${costText(d.cost)} · ${d.kind==='bridge'?`${d.span} parcelas de agua`:'3 plazas'} · asigna adultos libres`):this.kind==='bridge'?'Toca una orilla seca junto al agua. Gira para elegir la dirección.':'Toca cuatro parcelas libres. Confirma el sitio antes de gastar.';
+    $('placement-message').textContent=d?(d.reason||`${costText(d.cost)} · ${d.kind==='bridge'?`${d.span} parcelas de agua`:BUILD_TYPES[d.kind].detail} · asigna adultos libres`):this.kind==='bridge'?'Toca una orilla seca junto al agua. Gira para elegir la dirección.':'Toca cuatro parcelas libres. Confirma el sitio antes de gastar.';
     $('confirm-placement').disabled=!d?.ok;$('rotate-build').textContent=`Girar · ${{y:'↙',x:'↘','-y':'↗','-x':'↖'}[this.axis]}`;this.onChange();
   }
   refresh(){
-    if(this.kind)this.preview();if($('build-panel').hidden)return;
+    if(this.kind)this.preview();if($('build-panel').hidden)return;for(const kind of Object.keys(BUILD_TYPES)){const reason=this.sim.buildingReason(kind),button=$('place-'+kind);button.disabled=!!reason;button.title=reason;const hint=button.parentElement.querySelector('[data-build-hint]');if(hint)hint.textContent=reason||costText(BUILD_TYPES[kind].cost);}
     $('build-summary').textContent=`${this.sim.homes().length} refugios · ${this.sim.capacity()} plazas · ${this.sim.buildings.filter(b=>b.kind==='bridge'&&b.complete).length} puentes`;
     const projects=this.sim.buildings.filter(b=>b.reserved),stamp=projects.map(b=>`${b.id}/${b.complete}`).join();
     if(stamp!==this.stamp){this.stamp=stamp;$('project-list').replaceChildren();
@@ -40,7 +40,7 @@ export class BuildUI{
         row.append(title,state,bar,assign,cancel);$('project-list').append(row);
       }
     }
-    for(const b of projects){const row=$('project-list').querySelector(`[data-project="${b.id}"]`);const workers=this.sim.people.filter(p=>['shelter','bridge'].includes(p.job?.kind)&&this.sim.jobProject(p.job)===b).length;row.querySelector('p').textContent=b.complete?(b.kind==='bridge'?'Paso abierto entre orillas.':'Terminado · tres plazas de descanso.'):`${Math.floor(b.progress*100)}% · ${workers} constructores · materiales reservados`;row.querySelector('progress').value=b.progress;for(const button of row.querySelectorAll('button'))button.hidden=b.complete;}
+    for(const b of projects){const row=$('project-list').querySelector(`[data-project="${b.id}"]`);const workers=this.sim.people.filter(p=>['shelter','bridge','furnace','workshop'].includes(p.job?.kind)&&this.sim.jobProject(p.job)===b).length;row.querySelector('p').textContent=b.complete?(b.kind==='bridge'?'Paso abierto entre orillas.':BUILD_TYPES[b.kind].detail):`${Math.floor(b.progress*100)}% · ${workers} constructores · materiales reservados`;row.querySelector('progress').value=b.progress;for(const button of row.querySelectorAll('button'))button.hidden=b.complete;}
     $('no-projects').hidden=projects.length>0;
   }
 }
